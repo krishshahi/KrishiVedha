@@ -1,0 +1,127 @@
+/* HomeScreen.css - Home screen styles */
+.home-screen {
+  flex: 1;
+  background-color: #f5f5f5;
+  padding: 16px;
+}
+
+.home-header {
+  margin-bottom: 24px;
+}
+
+.home-welcome {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.home-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.home-quick-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.home-stat-card {
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.home-stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #27ae60;
+  margin-bottom: 4px;
+}
+
+.home-stat-label {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.home-sections {
+  gap: 24px;
+}
+
+.home-section {
+  margin-bottom: 24px;
+}
+
+.home-section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.home-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.home-action-button {
+  padding: 16px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-action-button:hover {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+}
+
+.home-action-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #007bff;
+}
+
+.home-action-text {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.home-recent-activity {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.home-activity-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-activity-item:last-child {
+  border-bottom: none;
+}
+
+.home-activity-text {
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.home-activity-time {
+  color: #7f8c8d;
+  font-size: 12px;
+}
+
