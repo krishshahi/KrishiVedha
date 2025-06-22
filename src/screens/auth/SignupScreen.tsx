@@ -8,10 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { registerUser, clearError } from '../../store/slices/authSlice';
 import { COLORS } from '../../constants/colors';
 import { styles } from '../../styles/SignupScreen.styles';
+import AppLogo from '../../components/common/AppLogo';
 
 interface SignupScreenProps {
   navigation: any;
@@ -22,7 +25,8 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { register, isLoading } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -40,13 +44,14 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
       return;
     }
 
-    try {
-      await register({ name, email, password });
-    } catch (error: any) {
-      Alert.alert(
-        'Signup Failed',
-        error?.response?.data?.message || 'An error occurred during signup'
-      );
+    // Clear any previous errors
+    dispatch(clearError());
+    
+    // Dispatch register action
+    const result = await dispatch(registerUser({ name, email, password }));
+    
+    if (registerUser.rejected.match(result)) {
+      Alert.alert('Signup Failed', result.payload as string);
     }
   };
 
@@ -61,6 +66,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
+          <AppLogo size="medium" style={styles.logoContainer} />
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join our farming community</Text>
 

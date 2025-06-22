@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { COLORS } from '../constants/colors';
 import { SPACING, FONTS } from '../constants/theme';
-import { apiService } from '../services/apiService';
-import styles from '../styles/ProfileScreen.styles';
+import apiService from '../services/apiService';
+import { profileScreenStyles as styles } from '../styles/ProfileScreen.styles';
+import { logoutUser } from '../store/slices/authSlice';
+import { fetchDashboardData } from '../store/slices/dashboardSlice';
 
 interface SettingItemProps {
   title: string;
@@ -73,198 +76,29 @@ const FarmCard: React.FC<FarmCardProps> = ({ name, location, crops, size, onPres
   );
 };
 
-// Types for backend data
-interface UserProfile {
-  id: string;
-  name: string;
-  profileType: string;
-  location: string;
-  language: string;
-  profileImage?: string;
-}
-
-interface Farm {
-  id: string;
-  name: string;
-  location: string;
-  crops: string[];
-  size: string;
-}
-
-interface UserSettings {
-  weatherAlerts: boolean;
-  cropReminders: boolean;
-  communityUpdates: boolean;
-  units: string;
-}
-
-// API functions using the backend service
-const fetchUserProfile = async (): Promise<UserProfile> => {
-  try {
-    const userData = await apiService.getCurrentUser();
-    return {
-      id: userData.id,
-      name: userData.name,
-      profileType: userData.profile_type || 'Farmer',
-      location: userData.location || 'Not set',
-      language: userData.language || 'English'
-    };
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    // Return default profile on error
-    return {
-      id: '1',
-      name: 'John Doe',
-      profileType: 'Farmer',
-      location: 'Unknown Location',
-      language: 'English'
-    };
-  }
-};
-
-const fetchUserFarms = async (): Promise<Farm[]> => {
-  try {
-    const farmsData = await apiService.getFarms();
-    return farmsData.map(farm => ({
-      id: farm.id,
-      name: farm.name,
-      location: farm.location,
-      crops: farm.crops || [],
-      size: farm.size || 'Unknown size'
-    }));
-  } catch (error) {
-    console.error('Error fetching user farms:', error);
-    // Return empty array on error
-    return [];
-  }
-};
-
-const fetchUserSettings = async (): Promise<UserSettings> => {
-  try {
-    // Since we don't have a specific settings endpoint yet,
-    // we'll use the user data and provide defaults
-    const userData = await apiService.getCurrentUser();
-    return {
-      weatherAlerts: userData.weather_alerts ?? true,
-      cropReminders: userData.crop_reminders ?? true,
-      communityUpdates: userData.community_updates ?? false,
-      units: userData.units || 'Metric'
-    };
-  } catch (error) {
-    console.error('Error fetching user settings:', error);
-    // Return default settings on error
-    return {
-      weatherAlerts: true,
-      cropReminders: true,
-      communityUpdates: false,
-      units: 'Metric'
-    };
-  }
-};
-
 const ProfileScreen = () => {
-  // User profile state
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Settings state
-  const [weatherAlerts, setWeatherAlerts] = useState(true);
-  const [cropReminders, setCropReminders] = useState(true);
-  const [communityUpdates, setCommunityUpdates] = useState(false);
-  const [units, setUnits] = useState('Metric');
-  
-  // Fetch data from backend on component mount
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch all data concurrently
-        const [profileData, farmsData, settingsData] = await Promise.all([
-          fetchUserProfile(),
-          fetchUserFarms(),
-          fetchUserSettings()
-        ]);
-        
-        setUserProfile(profileData);
-        setFarms(farmsData);
-        setWeatherAlerts(settingsData.weatherAlerts);
-        setCropReminders(settingsData.cropReminders);
-        setCommunityUpdates(settingsData.communityUpdates);
-        setUnits(settingsData.units);
-        
-      } catch (err) {
-        setError('Failed to load profile data. Please try again.');
-        console.error('Error loading user data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadUserData();
-  }, []);
-  
-  if (loading) {
+  const dispatch = useAppDispatch();
+  const { user, isLoading } = useAppSelector((state) => state.auth);
+
+  if (isLoading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
-  
-  if (error) {
+
+  if (!user) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={() => {
-              setError(null);
-              // Trigger data reload by calling loadUserData again
-              const loadUserData = async () => {
-                try {
-                  setLoading(true);
-                  setError(null);
-                  
-                  const [profileData, farmsData, settingsData] = await Promise.all([
-                    fetchUserProfile(),
-                    fetchUserFarms(),
-                    fetchUserSettings()
-                  ]);
-                  
-                  setUserProfile(profileData);
-                  setFarms(farmsData);
-                  setWeatherAlerts(settingsData.weatherAlerts);
-                  setCropReminders(settingsData.cropReminders);
-                  setCommunityUpdates(settingsData.communityUpdates);
-                  setUnits(settingsData.units);
-                  
-                } catch (err) {
-                  setError('Failed to load profile data. Please try again.');
-                  console.error('Error loading user data:', err);
-                } finally {
-                  setLoading(false);
-                }
-              };
-              loadUserData();
-            }}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>User not found. Please log in.</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => dispatch(logoutUser())}
+        >
+          <Text style={styles.retryButtonText}>Go to Login</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -274,73 +108,58 @@ const ProfileScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
-      
+
       <ScrollView style={styles.scrollView}>
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <Text style={styles.profileImagePlaceholder}>👨‍🌾</Text>
           </View>
-          <Text style={styles.profileName}>{userProfile?.name || 'Unknown User'}</Text>
-          <Text style={styles.profileType}>{userProfile?.profileType || 'User'}</Text>
+          <Text style={styles.profileName}>{user.name}</Text>
+          <Text style={styles.profileType}>{user.role}</Text>
           <TouchableOpacity style={styles.editProfileButton}>
             <Text style={styles.editProfileButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.farmSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>My Farms</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.addButton}
-              onPress={async () => {
-                try {
-                  // Create a new farm (example implementation)
-                  const newFarm = await apiService.createFarm({
-                    name: 'New Farm',
-                    location: 'Enter location',
-                    crops: [],
-                    size: '0 hectares'
-                  });
-                  
-                  // Refresh farms list
-                  const updatedFarms = await fetchUserFarms();
-                  setFarms(updatedFarms);
-                  
-                  console.log('New farm created:', newFarm);
-                } catch (error) {
-                  console.error('Error creating farm:', error);
-                }
+              onPress={() => {
+                // Navigate to an "Add Farm" screen
               }}
             >
               <Text style={styles.addButtonText}>+ Add Farm</Text>
             </TouchableOpacity>
           </View>
-          
-          {farms.length > 0 ? (
-            farms.map((farm) => (
+
+          {user.farms && user.farms.length > 0 ? (
+            user.farms.map((farm) => (
               <FarmCard
                 key={farm.id}
                 name={farm.name}
-                location={farm.location}
-                crops={farm.crops}
-                size={farm.size}
+                location={farm.location.address}
+                crops={farm.crops.map(c => c.name)}
+                size={`${farm.size.value} ${farm.size.unit}`}
                 onPress={() => {
-                  // Navigate to farm details or handle farm selection
-                  console.log('Selected farm:', farm.name);
+                  // Navigate to farm details
                 }}
               />
             ))
           ) : (
             <View style={styles.emptyFarmsContainer}>
               <Text style={styles.emptyFarmsText}>No farms found</Text>
-              <Text style={styles.emptyFarmsSubtext}>Add your first farm to get started</Text>
+              <Text style={styles.emptyFarmsSubtext}>
+                Add your first farm to get started
+              </Text>
             </View>
           )}
         </View>
-        
+
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Settings</Text>
-          
+
           <View style={styles.settingsGroup}>
             <Text style={styles.settingsGroupTitle}>Account</Text>
             <SettingItem
@@ -351,48 +170,48 @@ const ProfileScreen = () => {
             <SettingItem
               title="Location"
               icon="📍"
-              value={userProfile?.location || 'Not set'}
+              value={`${user.location?.district}, ${user.location?.country}`}
               onPress={() => {}}
             />
             <SettingItem
               title="Language"
               icon="🌐"
-              value={userProfile?.language || 'English'}
+              value={user.preferences.language}
               onPress={() => {}}
             />
             <SettingItem
               title="Measurement Units"
               icon="📏"
-              value={units}
+              value={user.preferences.measurementUnit}
               onPress={() => {}}
             />
           </View>
-          
+
           <View style={styles.settingsGroup}>
             <Text style={styles.settingsGroupTitle}>Notifications</Text>
             <SettingItem
               title="Weather Alerts"
               icon="⛈️"
               isSwitch
-              isSwitchOn={weatherAlerts}
-              onToggle={setWeatherAlerts}
+              isSwitchOn={user.preferences.weatherAlerts}
+              onToggle={() => {}}
             />
             <SettingItem
               title="Crop Reminders"
               icon="🌱"
               isSwitch
-              isSwitchOn={cropReminders}
-              onToggle={setCropReminders}
+              isSwitchOn={user.preferences.cropReminders}
+              onToggle={() => {}}
             />
             <SettingItem
               title="Community Updates"
               icon="👥"
               isSwitch
-              isSwitchOn={communityUpdates}
-              onToggle={setCommunityUpdates}
+              isSwitchOn={user.preferences.communityUpdates}
+              onToggle={() => {}}
             />
           </View>
-          
+
           <View style={styles.settingsGroup}>
             <Text style={styles.settingsGroupTitle}>About</Text>
             <SettingItem
@@ -405,14 +224,26 @@ const ProfileScreen = () => {
               icon="📜"
               onPress={() => {}}
             />
-            <SettingItem
-              title="App Version"
-              icon="📱"
-              value="1.0.0"
-            />
+            <SettingItem title="App Version" icon="📱" value="1.0.0" />
           </View>
-          
-          <TouchableOpacity style={styles.logoutButton}>
+
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => {
+              Alert.alert(
+                'Sign Out',
+                'Are you sure you want to sign out?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Sign Out',
+                    style: 'destructive',
+                    onPress: () => dispatch(logoutUser()),
+                  },
+                ]
+              );
+            }}
+          >
             <Text style={styles.logoutButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>

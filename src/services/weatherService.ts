@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { WeatherData, WeatherForecast } from '../types/weather.types';
 
-// Free weather API - OpenWeatherMap (requires API key)
-// You can get a free API key from https://openweathermap.org/api
-const WEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // Replace with actual API key
-const WEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+// Free weather API - Open-Meteo (no API key required)
+// Documentation: https://open-meteo.com/
+const WEATHER_BASE_URL = 'https://api.open-meteo.com/v1';
+const GEOCODING_BASE_URL = 'https://geocoding-api.open-meteo.com/v1';
 
 class WeatherService {
   private apiKey: string;

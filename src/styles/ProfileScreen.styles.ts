@@ -41,7 +41,7 @@ export const profileScreenStyles = StyleSheet.create({
   profileName: {
     fontSize: FONTS.size.xl,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
     marginBottom: SPACING.xs,
   },
   profileType: {
@@ -73,7 +73,7 @@ export const profileScreenStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: FONTS.size.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   addButton: {
     backgroundColor: COLORS.primaryLight,
@@ -115,7 +115,7 @@ export const profileScreenStyles = StyleSheet.create({
   farmName: {
     fontSize: FONTS.size.md,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
     marginBottom: SPACING.xs,
   },
   farmLocation: {
@@ -125,11 +125,11 @@ export const profileScreenStyles = StyleSheet.create({
   },
   farmCrops: {
     fontSize: FONTS.size.sm,
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   farmSize: {
     fontSize: FONTS.size.sm,
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   settingsSection: {
     padding: SPACING.md,
@@ -160,7 +160,7 @@ export const profileScreenStyles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: FONTS.size.md,
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   settingValue: {
     fontSize: FONTS.size.sm,

@@ -7,48 +7,37 @@
 
 // Import polyfills first
 import 'react-native-url-polyfill/auto';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StatusBar, StyleSheet, SafeAreaView } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import AppNavigator from './navigation/AppNavigator';
-import AuthNavigator from './navigation/AuthNavigator';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { store, persistor } from './store';
 import { COLORS } from './constants/colors';
-import { THEME } from './constants/theme';
 
 /**
  * KrishiVeda - A farming app for Nepali farmers
  * Main Application Component
  */
 
-// Component that uses auth context to conditionally render navigators
-function AppContent(): React.JSX.Element {
-  const { user } = useAuth();
-
+const App: React.FC = () => {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor={COLORS.primary}
-        />
-        <SafeAreaView style={styles.container}>
-          {user ? <AppNavigator /> : <AuthNavigator />}
-        </SafeAreaView>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+            <SafeAreaView style={styles.container}>
+              <AppNavigator />
+            </SafeAreaView>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </PersistGate>
+    </Provider>
   );
-}
-
-// Main App component that wraps everything with AuthProvider
-function App(): React.JSX.Element {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

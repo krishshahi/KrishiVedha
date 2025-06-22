@@ -1,8 +1,11 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { COLORS } from '../constants/colors';
 import { SPACING, FONTS } from '../constants/theme';
 import { styles } from '../styles/HomeScreen.styles';
+import { fetchDashboardData, refreshDashboardData } from '../store/slices/dashboardSlice';
+import { logoutUser } from '../store/slices/authSlice';
 
 interface FeatureCardProps {
   title: string;
@@ -28,19 +31,124 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, icon, description, onP
 };
 
 const HomeScreen = () => {
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const {
+    userStats,
+    recentFarms,
+    weatherData,
+    isLoading,
+    isRefreshing,
+    error,
+  } = useAppSelector((state) => state.dashboard);
+
+  // Load dashboard data on component mount
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      dispatch(fetchDashboardData(user.id));
+    }
+  }, [isAuthenticated, user?.id, dispatch]);
+
+  // Handle refresh
+  const onRefresh = useCallback(() => {
+    if (user?.id) {
+      dispatch(refreshDashboardData(user.id));
+    }
+  }, [user?.id, dispatch]);
+
+  // Handle logout
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: () => dispatch(logoutUser())
+        },
+      ]
+    );
+  }, [dispatch]);
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Please log in to access the app</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.appName}>KrishiVeda</Text>
-        <Text style={styles.tagline}>Smart farming for Nepal</Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.appName}>KrishiVeda</Text>
+            <Text style={styles.tagline}>Welcome, {user?.name || 'Farmer'}!</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* User Statistics Summary */}
+        <View style={styles.statsContainer}>
+          <Text style={styles.sectionTitle}>Your Farm Overview</Text>
+          {userStats ? (
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.farmCount}</Text>
+                <Text style={styles.statLabel}>Farms</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.totalArea.toFixed(1)}</Text>
+                <Text style={styles.statLabel}>Total Area (ha)</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.cropTypes.length}</Text>
+                <Text style={styles.statLabel}>Crop Types</Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.loadingText}>
+              {isLoading ? 'Loading statistics...' : 'No data available'}
+            </Text>
+          )}
+        </View>
+
+        {/* Recent Farms */}
+        {recentFarms.length > 0 && (
+          <View style={styles.farmsContainer}>
+            <Text style={styles.sectionTitle}>Recent Farms</Text>
+            {recentFarms.slice(0, 2).map((farm, index) => (
+              <View key={farm.id || index} style={styles.farmCard}>
+                <View style={styles.farmIcon}>
+                  <Text style={styles.farmIconText}>🌾</Text>
+                </View>
+                <View style={styles.farmInfo}>
+                  <Text style={styles.farmName}>{farm.name}</Text>
+                  <Text style={styles.farmLocation}>{farm.location}</Text>
+                  <Text style={styles.farmArea}>{farm.area} hectares</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Weather Summary Section */}
         <View style={styles.weatherSummary}>
           <View style={styles.weatherInfo}>
             <Text style={styles.temperatureText}>28°C</Text>
-            <Text style={styles.locationText}>Kathmandu</Text>
+            <Text style={styles.locationText}>{user?.location || 'Your Location'}</Text>
             <Text style={styles.weatherCondition}>Partly Cloudy</Text>
           </View>
           <View style={styles.weatherDetails}>

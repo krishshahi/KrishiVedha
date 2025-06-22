@@ -10,7 +10,7 @@ export interface User {
   profilePicture?: string;
   role: UserRole;
   location?: UserLocation;
-  farms?: string[]; // farm ids
+  farms?: Farm[];
   preferences: UserPreferences;
   isVerified: boolean;
   createdAt: string;
@@ -83,6 +83,42 @@ export interface Comment {
   likes: number;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface Farm {
+  id: string;
+  name: string;
+  location: {
+    address: string;
+    coordinates: {
+      type: string;
+      coordinates: number[];
+    };
+    country: string;
+    state: string;
+    city: string;
+  };
+  size: {
+    value: number;
+    unit: string;
+  };
+  farmType: string;
+  crops: {
+    name: string;
+    status: string;
+  }[];
+  soilData: {
+    ph: number;
+    nitrogen: number;
+    phosphorus: number;
+    potassium: number;
+    organicMatter: number;
+    lastTested: Date;
+  };
+  irrigation: {
+    system: string;
+    waterSource: string;
+  };
 }
 
 export interface ExpertAdvice {

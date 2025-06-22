@@ -75,7 +75,7 @@ export const communityScreenStyles = StyleSheet.create({
   postInput: {
     flex: 1,
     height: 40,
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   createPostActions: {
     flexDirection: 'row',
@@ -130,7 +130,7 @@ export const communityScreenStyles = StyleSheet.create({
   authorName: {
     fontSize: FONTS.size.md,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   postTime: {
     fontSize: FONTS.size.sm,
@@ -138,7 +138,7 @@ export const communityScreenStyles = StyleSheet.create({
   },
   postContent: {
     fontSize: FONTS.size.md,
-    color: COLORS.text,
+    color: COLORS.text.primary,
     lineHeight: 22,
     marginBottom: SPACING.md,
   },
@@ -170,7 +170,7 @@ export const communityScreenStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: FONTS.size.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
     marginVertical: SPACING.md,
   },
   askExpertContainer: {
@@ -190,7 +190,7 @@ export const communityScreenStyles = StyleSheet.create({
     borderRadius: 10,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    color: COLORS.text,
+    color: COLORS.text.primary,
     textAlignVertical: 'top',
   },
   submitQuestionButton: {
@@ -234,7 +234,7 @@ export const communityScreenStyles = StyleSheet.create({
   expertName: {
     fontSize: FONTS.size.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   expertSpecialty: {
     fontSize: FONTS.size.md,
@@ -284,7 +284,7 @@ export const communityScreenStyles = StyleSheet.create({
   expertAdviceName: {
     fontSize: FONTS.size.md,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   expertAdviceTime: {
     fontSize: FONTS.size.sm,
@@ -306,7 +306,7 @@ export const communityScreenStyles = StyleSheet.create({
   questionText: {
     flex: 1,
     fontSize: FONTS.size.md,
-    color: COLORS.text,
+    color: COLORS.text.primary,
   },
   answerContainer: {
     flexDirection: 'row',
@@ -320,7 +320,7 @@ export const communityScreenStyles = StyleSheet.create({
   answerText: {
     flex: 1,
     fontSize: FONTS.size.md,
-    color: COLORS.text,
+    color: COLORS.text.primary,
     lineHeight: 22,
   },
   readMoreLink: {
@@ -347,7 +347,7 @@ export const communityScreenStyles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: FONTS.size.xl,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: COLORS.text.primary,
     marginBottom: SPACING.sm,
   },
   emptyStateMessage: {

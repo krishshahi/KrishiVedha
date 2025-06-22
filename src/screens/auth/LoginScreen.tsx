@@ -9,10 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { loginUser, clearError } from '../../store/slices/authSlice';
 import { COLORS } from '../../constants/colors';
 import { styles } from '../../styles/LoginScreen.styles';
+import AppLogo from '../../components/common/AppLogo';
 
 interface LoginScreenProps {
   navigation: any;
@@ -21,7 +24,8 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,13 +33,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       return;
     }
 
-    try {
-      await login({ email, password });
-    } catch (error: any) {
-      Alert.alert(
-        'Login Failed',
-        error?.response?.data?.message || 'An error occurred during login'
-      );
+    // Clear any previous errors
+    dispatch(clearError());
+    
+    // Dispatch login action
+    const result = await dispatch(loginUser({ email, password }));
+    
+    if (loginUser.rejected.match(result)) {
+      Alert.alert('Login Failed', result.payload as string);
     }
   };
 
@@ -50,6 +55,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
+          <AppLogo size="medium" style={styles.logoContainer} />
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
 

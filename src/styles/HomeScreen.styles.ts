@@ -12,6 +12,24 @@ export const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
   },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  logoutText: {
+    color: COLORS.textWhite,
+    fontSize: FONTS.size.sm,
+    fontWeight: '600',
+  },
   appName: {
     fontSize: FONTS.size.xxl,
     fontWeight: 'bold',
@@ -176,5 +194,100 @@ export const styles = StyleSheet.create({
   calendarDescription: {
     fontSize: FONTS.size.sm,
     color: COLORS.textLight,
+  },
+  // Stats section styles
+  statsContainer: {
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    flex: 1,
+    marginHorizontal: SPACING.xs,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  statNumber: {
+    fontSize: FONTS.size.xl,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: SPACING.xs,
+  },
+  statLabel: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.textLight,
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: FONTS.size.md,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    padding: SPACING.lg,
+    fontStyle: 'italic',
+  },
+  // Farms section styles
+  farmsContainer: {
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  farmCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  farmIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  farmIconText: {
+    fontSize: 24,
+  },
+  farmInfo: {
+    flex: 1,
+  },
+  farmName: {
+    fontSize: FONTS.size.md,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
+  farmLocation: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.textLight,
+    marginBottom: SPACING.xs,
+  },
+  farmArea: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  errorText: {
+    fontSize: FONTS.size.lg,
+    color: COLORS.error,
+    textAlign: 'center',
+    padding: SPACING.xl,
   },
 });

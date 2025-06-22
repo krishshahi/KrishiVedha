@@ -28,12 +28,8 @@ export const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 120,
+    height: 120,
     marginBottom: SPACING.md,
   },
   logoText: {

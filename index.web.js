@@ -1,13 +1,14 @@
+/**
+ * @format
+ */
+
+// Setup polyfills first
+import './src/utils/polyfills';
 import { AppRegistry } from 'react-native';
-import App from './App';
-import { name as appName } from './app.json';
+import App from './src/App';
 
-// Register the app for web
-AppRegistry.registerComponent(appName, () => App);
-
-// Run the app in the browser
-AppRegistry.runApplication(appName, {
-  initialProps: {},
+// For web, the app name should be 'main'
+AppRegistry.registerComponent('main', () => App);
+AppRegistry.runApplication('main', {
   rootTag: document.getElementById('root'),
 });
-

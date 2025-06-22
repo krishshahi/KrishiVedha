@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { loadStoredAuth } from '../store/slices/authSlice';
 import { COLORS } from '../constants/colors';
+import AuthNavigator from './AuthNavigator';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 
 // Import detailed screens
 import HomeScreen from '../screens/HomeScreen';
@@ -15,6 +19,28 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+// Loading component
+const LoadingScreen = () => (
+  <View style={loadingStyles.container}>
+    <ActivityIndicator size="large" color={COLORS.primary} />
+    <Text style={loadingStyles.text}>Loading...</Text>
+  </View>
+);
+
+const loadingStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  text: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.text,
+  },
+});
 
 // Stack navigators for each main screen
 const HomeStack = () => (
@@ -73,7 +99,8 @@ const ProfileStack = () => (
   </Stack.Navigator>
 );
 
-function AppNavigator(): React.JSX.Element {
+// Main Tab Navigator
+const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
   
   return (
@@ -146,6 +173,33 @@ function AppNavigator(): React.JSX.Element {
       />
     </Tab.Navigator>
   );
+};
+
+// Main App Navigator that handles authentication
+function AppNavigator(): React.JSX.Element {
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
+  
+  // Load stored authentication on app start
+  useEffect(() => {
+    dispatch(loadStoredAuth());
+  }, [dispatch]);
+  
+  // Show loading if we're checking stored auth
+  if (isLoading) {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Loading" 
+          component={LoadingScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    );
+  }
+  
+  // Return appropriate navigator based on auth state
+  return isAuthenticated ? <MainTabNavigator /> : <AuthNavigator />;
 }
 
 export default AppNavigator;

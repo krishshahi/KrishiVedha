@@ -1,4 +1,4 @@
-package com.myreactnativeapp
+package com.krishiveda.app
 import expo.modules.ReactActivityDelegateWrapper
 
 import com.facebook.react.ReactActivity

@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#4CAF50"
+      "backgroundColor": "#ffffff"
     },
     "platforms": [
       "ios",
@@ -33,6 +33,9 @@
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "REACT_NATIVE_API_URL": "http://10.0.0.174:3000/api"
+    }
   }
 }

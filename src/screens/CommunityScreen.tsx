@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { SPACING, FONTS } from '../constants/theme';
-import { styles } from '../styles/CommunityScreen.styles';
+import { communityScreenStyles as styles } from '../styles/CommunityScreen.styles';
 
 interface PostCardProps {
   author: string;
