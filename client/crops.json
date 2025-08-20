@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "crop": "Rice",
+    "varieties": ["Basmati", "Japonica"],
+    "plantation_to_harvest_duration": "120-150 days"
+  },
+  {
+    "id": 2,
+    "crop": "Wheat",
+    "varieties": ["Durum", "Emmer"],
+    "plantation_to_harvest_duration": "90-100 days"
+  },
+  {
+    "id": 3,
+    "crop": "Corn",
+    "varieties": ["Sweet Corn", "Flint Corn"],
+    "plantation_to_harvest_duration": "80-100 days"
+  },
+  {
+    "id": 4,
+    "crop": "Potato",
+    "varieties": ["Yukon Gold", "Russet"],
+    "plantation_to_harvest_duration": "75-120 days"
+  },
+  {
+    "id": 5,
+    "crop": "Tomato",
+    "varieties": ["Cherry Tomato", "Heirloom"],
+    "plantation_to_harvest_duration": "60-80 days"
+  },
+  {
+    "id": 6,
+    "crop": "Millet",
+    "varieties": ["Finger Millet", "Proso Millet"],
+    "plantation_to_harvest_duration": "95-100 days"
+  },
+  {
+    "id": 7,
+    "crop": "Lentils",
+    "varieties": ["Red Lentil", "Green Lentil"],
+    "plantation_to_harvest_duration": "175-185 days"
+  },
+  {
+    "id": 8,
+    "crop": "Buckwheat",
+    "varieties": ["Black Tartary", "Silverhull"],
+    "plantation_to_harvest_duration": "70-90 days"
+  },
+  {
+    "id": 9,
+    "crop": "Barley",
+    "varieties": ["Two-row", "Six-row"],
+    "plantation_to_harvest_duration": "60-70 days"
+  },
+  {
+    "id": 10,
+    "crop": "Mustard",
+    "varieties": ["Yellow Mustard", "Brown Mustard"],
+    "plantation_to_harvest_duration": "85-95 days"
+  },
+  {
+    "id": 11,
+    "crop": "Tea",
+    "varieties": ["Assam Tea", "Darjeeling Tea"],
+    "plantation_to_harvest_duration": "3-4 years"
+  },
+  {
+    "id": 12,
+    "crop": "Coffee",
+    "varieties": ["Arabica", "Robusta"],
+    "plantation_to_harvest_duration": "3-5 years"
+  },
+  {
+    "id": 13,
+    "crop": "Cardamom",
+    "varieties": ["Green Cardamom", "Black Cardamom"],
+    "plantation_to_harvest_duration": "2-3 years"
+  },
+  {
+    "id": 14,
+    "crop": "Ginger",
+    "varieties": ["Chinese Ginger", "Indian Ginger"],
+    "plantation_to_harvest_duration": "8-10 months"
+  },
+  {
+    "id": 15,
+    "crop": "Turmeric",
+    "varieties": ["Turmeric Curcuma", "Rajapuri Turmeric"],
+    "plantation_to_harvest_duration": "7-9 months"
+  }
+]

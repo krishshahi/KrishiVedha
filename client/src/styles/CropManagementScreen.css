@@ -1,0 +1,152 @@
+/* CropManagementScreen.css - Crop management screen styles */
+.crop-management-screen {
+  flex: 1;
+  background-color: #f5f5f5;
+  padding: 16px;
+}
+
+.crop-management-header {
+  margin-bottom: 24px;
+}
+
+.crop-management-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.crop-management-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.crop-management-filters {
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.crop-management-filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.crop-management-filter-row:last-child {
+  margin-bottom: 0;
+}
+
+.crop-management-filter {
+  flex: 1;
+}
+
+.crop-management-filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.crop-management-filter-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.crop-management-filter-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+.crop-management-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.crop-management-search {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.crop-management-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.crop-management-add-button {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.crop-management-add-button:hover {
+  background-color: #218838;
+}
+
+.crop-management-list {
+  gap: 12px;
+}
+
+.crop-management-empty {
+  text-align: center;
+  padding: 40px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.crop-management-empty-icon {
+  font-size: 48px;
+  color: #ddd;
+  margin-bottom: 16px;
+}
+
+.crop-management-empty-text {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.crop-management-empty-subtext {
+  font-size: 14px;
+  color: #95a5a6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .crop-management-filter-row {
+    flex-direction: column;
+  }
+  
+  .crop-management-actions {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .crop-management-search {
+    max-width: none;
+  }
+}
+

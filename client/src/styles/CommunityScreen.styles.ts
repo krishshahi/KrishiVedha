@@ -1,0 +1,498 @@
+import { StyleSheet } from 'react-native';
+import { COLORS, SPACING, FONTS, SHADOWS, BORDER_RADIUS } from '../constants/theme';
+
+export const communityScreenStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    backgroundColor: COLORS.primary,
+    padding: SPACING.lg,
+    paddingTop: SPACING.xl,
+  },
+  headerTitle: {
+    fontSize: FONTS.size.xxl,
+    fontWeight: 'bold',
+    color: COLORS.text.primaryWhite,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.backgroundDark,
+    padding: SPACING.xs,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primaryLight,
+  },
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  feedContainer: {
+    padding: SPACING.md,
+  },
+  createPostContainer: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  createPostHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  avatarPlaceholder: {
+    fontSize: 20,
+  },
+  postInput: {
+    flex: 1,
+    height: 40,
+    color: COLORS.text.primary,
+  },
+  createPostActions: {
+    flexDirection: 'row',
+    marginTop: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: SPACING.sm,
+  },
+  createPostAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: SPACING.lg,
+  },
+  actionIcon: {
+    fontSize: 18,
+    marginRight: SPACING.xs,
+  },
+  actionText: {
+    color: COLORS.text.primaryLight,
+    fontSize: FONTS.size.sm,
+  },
+  postButton: {
+    marginLeft: 'auto',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: 20,
+  },
+  postButtonText: {
+    color: COLORS.text.primaryWhite,
+    fontWeight: 'bold',
+  },
+  postCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  postHeaderInfo: {
+    flex: 1,
+  },
+  authorName: {
+    fontSize: FONTS.size.md,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  postTime: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.text.primaryLight,
+  },
+  postContent: {
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primary,
+    lineHeight: 22,
+    marginBottom: SPACING.md,
+  },
+  postImageContainer: {
+    height: 200,
+    backgroundColor: COLORS.backgroundDark,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  postImagePlaceholder: {
+    fontSize: 60,
+  },
+  postActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: SPACING.sm,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expertsContainer: {
+    padding: SPACING.md,
+  },
+  sectionTitle: {
+    fontSize: FONTS.size.lg,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    marginVertical: SPACING.md,
+  },
+  askExpertContainer: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  expertQuestionInput: {
+    height: 100,
+    backgroundColor: COLORS.backgroundDark,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    color: COLORS.text.primary,
+    textAlignVertical: 'top',
+  },
+  submitQuestionButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  submitQuestionButtonText: {
+    color: COLORS.text.primaryWhite,
+    fontWeight: 'bold',
+    fontSize: FONTS.size.md,
+  },
+  expertCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  expertAvatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.accent + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  expertAvatarPlaceholder: {
+    fontSize: 30,
+  },
+  expertInfo: {
+    flex: 1,
+  },
+  expertName: {
+    fontSize: FONTS.size.lg,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  expertSpecialty: {
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primaryLight,
+    marginBottom: SPACING.sm,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingStars: {
+    fontSize: FONTS.size.md,
+    marginRight: SPACING.xs,
+  },
+  ratingValue: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.text.primaryLight,
+  },
+  expertAdviceCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  expertAdviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  expertAvatarSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.accent + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  expertAvatarPlaceholderSmall: {
+    fontSize: 20,
+  },
+  expertAdviceName: {
+    fontSize: FONTS.size.md,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  expertAdviceTime: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.text.primaryLight,
+  },
+  questionContainer: {
+    flexDirection: 'row',
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.backgroundDark,
+    padding: SPACING.sm,
+    borderRadius: 5,
+  },
+  questionLabel: {
+    fontSize: FONTS.size.md,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginRight: SPACING.sm,
+  },
+  questionText: {
+    flex: 1,
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primary,
+  },
+  answerContainer: {
+    flexDirection: 'row',
+  },
+  answerLabel: {
+    fontSize: FONTS.size.md,
+    fontWeight: 'bold',
+    color: COLORS.accent,
+    marginRight: SPACING.sm,
+  },
+  answerText: {
+    flex: 1,
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primary,
+    lineHeight: 22,
+  },
+  readMoreLink: {
+    alignSelf: 'flex-end',
+    marginTop: SPACING.md,
+  },
+  readMoreText: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
+  },
+  myPostsContainer: {
+    padding: SPACING.md,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  emptyStateIcon: {
+    fontSize: 60,
+    marginBottom: SPACING.md,
+  },
+  emptyStateTitle: {
+    fontSize: FONTS.size.xl,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    marginBottom: SPACING.sm,
+  },
+  emptyStateMessage: {
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primaryLight,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+    lineHeight: 22,
+  },
+  createFirstPostButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: 10,
+  },
+  createFirstPostButtonText: {
+    color: COLORS.text.primaryWhite,
+    fontWeight: 'bold',
+    fontSize: FONTS.size.md,
+  },
+  // Comment styles
+  commentInputContainer: {
+    flexDirection: 'row',
+    padding: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: COLORS.backgroundDark,
+    borderRadius: 20,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    marginRight: SPACING.md,
+    color: COLORS.text.primary,
+  },
+  commentSubmitButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingHorizontal: SPACING.md,
+    justifyContent: 'center',
+  },
+  commentSubmitButtonText: {
+    color: COLORS.text.primaryWhite,
+    fontWeight: 'bold',
+  },
+  commentCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginVertical: SPACING.sm,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+  },
+  commentAuthor: {
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    marginBottom: SPACING.xs,
+  },
+  commentContent: {
+    color: COLORS.text.primary,
+    marginBottom: SPACING.xs,
+  },
+  commentTime: {
+    fontSize: FONTS.size.xs,
+    color: COLORS.text.primaryLight,
+    alignSelf: 'flex-end',
+  },
+  // Marketplace styles
+  marketplaceContainer: {
+    padding: SPACING.md,
+  },
+  marketplaceCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    marginBottom: SPACING.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  marketplaceImageContainer: {
+    height: 120,
+    backgroundColor: COLORS.backgroundDark,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  marketplaceImagePlaceholder: {
+    fontSize: 40,
+  },
+  marketplaceItemInfo: {
+    padding: SPACING.md,
+  },
+  marketplaceItemTitle: {
+    fontSize: FONTS.size.lg,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    marginBottom: SPACING.xs,
+  },
+  marketplaceItemPrice: {
+    fontSize: FONTS.size.xl,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: SPACING.sm,
+  },
+  marketplaceItemLocation: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.text.primaryLight,
+    marginBottom: SPACING.xs,
+  },
+  marketplaceItemSeller: {
+    fontSize: FONTS.size.sm,
+    color: COLORS.text.primaryLight,
+    marginBottom: SPACING.md,
+  },
+  marketplaceItemMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  marketplaceItemTypeTag: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: 5,
+  },
+  sellTag: {
+    backgroundColor: COLORS.accent + '30',
+  },
+  rentTag: {
+    backgroundColor: COLORS.primary + '30',
+  },
+  marketplaceItemTypeText: {
+    fontSize: FONTS.size.xs,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+  },
+  marketplaceItemTime: {
+    fontSize: FONTS.size.xs,
+    color: COLORS.text.primaryLight,
+  },
+});
+
