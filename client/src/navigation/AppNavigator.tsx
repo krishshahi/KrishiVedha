@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { loadStoredAuth } from '../store/slices/authSlice';
-import { COLORS } from '../constants/colors';
+import { useDynamicTheme } from '../config/dynamicTheme';
+import { useDynamicI18n } from '../config/dynamicI18n';
 import AuthNavigator from './AuthNavigator';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 
@@ -17,6 +18,7 @@ import CommunityScreen from '../screens/CommunityScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import ViewProfileScreen from '../screens/ViewProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import AddCropScreen from '../screens/AddCropScreen';
 import CropDetailScreen from '../screens/CropDetailScreen';
 import AddFarmScreen from '../screens/AddFarmScreen';
@@ -26,105 +28,140 @@ import IoTDashboardScreen from '../screens/IoTDashboardScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Loading component
-const LoadingScreen = () => (
-  <View style={loadingStyles.container}>
-    <ActivityIndicator size="large" color={COLORS.primary} />
-    <Text style={loadingStyles.text}>Loading...</Text>
-  </View>
-);
-
-const loadingStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  text: {
-    marginTop: 16,
-    fontSize: 16,
-    color: COLORS.text.primary, // Use a string color value
-  },
-});
+// Dynamic Loading component
+const LoadingScreen = () => {
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
+  
+  const loadingStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    text: {
+      marginTop: 16,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+    },
+  });
+  
+  return (
+    <View style={loadingStyles.container}>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={loadingStyles.text}>{t('common.loading')}</Text>
+    </View>
+  );
+};
 
 // Stack navigators for each main screen
-const HomeStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
-);
+const HomeStack = () => {
+  const theme = useDynamicTheme();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
 
-const WeatherStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="WeatherMain" component={WeatherScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
-);
+const WeatherStack = () => {
+  const theme = useDynamicTheme();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="WeatherMain" component={WeatherScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
 
-const CropsStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="CropsMain" component={CropManagementScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddFarm" component={AddFarmScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AddCrop" component={AddCropScreen} options={{ title: 'Add New Crop' }} />
-    <Stack.Screen name="CropDetail" component={CropDetailScreen} options={{ title: 'Crop Details' }} />
-  </Stack.Navigator>
-);
+const CropsStack = () => {
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="CropsMain" component={CropManagementScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddFarm" component={AddFarmScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddCrop" component={AddCropScreen} options={{ title: t('crop.addCrop') }} />
+      <Stack.Screen name="CropDetail" component={CropDetailScreen} options={{ title: t('crop.title') }} />
+    </Stack.Navigator>
+  );
+};
 
 
-const CommunityStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="CommunityMain" component={CommunityScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post Details' }} />
-  </Stack.Navigator>
-);
+const CommunityStack = () => {
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="CommunityMain" component={CommunityScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: t('community.posts') }} />
+    </Stack.Navigator>
+  );
+};
 
-const ProfileStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="ViewProfile" component={ViewProfileScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
-);
+const ProfileStack = () => {
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ViewProfile" component={ViewProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t('settings.title') }} />
+    </Stack.Navigator>
+  );
+};
 
-const IoTStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: COLORS.primary },
-      headerTintColor: COLORS.textWhite,
-    }}
-  >
-    <Stack.Screen name="IoTMain" component={IoTDashboardScreen} options={{ headerShown: false }} />
-  </Stack.Navigator>
-);
+const IoTStack = () => {
+  const theme = useDynamicTheme();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: theme.colors.text.primaryWhite,
+      }}
+    >
+      <Stack.Screen name="IoTMain" component={IoTDashboardScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
 
-// Main Tab Navigator
+// Main Tab Navigator with Dynamic Theme
 const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
   
   return (
     <Tab.Navigator
@@ -150,11 +187,11 @@ const MainTabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textLight,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.text.secondary,
         tabBarStyle: {
-          backgroundColor: COLORS.background,
-          borderTopColor: COLORS.border,
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
           paddingBottom: Math.max(insets.bottom, 5),
           height: 60 + Math.max(insets.bottom, 5),
         },
@@ -165,42 +202,42 @@ const MainTabNavigator = () => {
         name="Home"
         component={HomeStack}
         options={{
-          title: 'Home',
+          title: t('navigation.home'),
         }}
       />
       <Tab.Screen
         name="Weather"
         component={WeatherStack}
         options={{
-          title: 'Weather',
+          title: t('navigation.weather'),
         }}
       />
       <Tab.Screen
         name="Crops"
         component={CropsStack}
         options={{
-          title: 'Crops',
+          title: t('navigation.crops'),
         }}
       />
       <Tab.Screen
         name="Community"
         component={CommunityStack}
         options={{
-          title: 'Community',
+          title: t('navigation.community'),
         }}
       />
       <Tab.Screen
         name="IoT"
         component={IoTStack}
         options={{
-          title: 'IoT Dashboard',
+          title: t('navigation.iot'),
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileStack}
         options={{
-          title: 'Profile',
+          title: t('navigation.profile'),
         }}
       />
     </Tab.Navigator>

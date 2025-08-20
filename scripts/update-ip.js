@@ -41,8 +41,8 @@ function updateAppJson() {
   console.log(`🔍 Detected IP: ${currentIP}`);
   console.log(`🔧 API URL: ${apiUrl}`);
   
-  // Update frontend app.json
-  const appJsonPath = path.join(__dirname, 'frontend', 'app.json');
+  // Update client app.json
+  const appJsonPath = path.join(__dirname, '..', 'client', 'app.json');
   
   try {
     const appJsonContent = fs.readFileSync(appJsonPath, 'utf8');

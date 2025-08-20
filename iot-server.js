@@ -101,6 +101,6 @@ server.listen(3001, '0.0.0.0', () => {
   console.log('🔌 WebSocket upgrade available on ws://0.0.0.0:3001');
   console.log('🌐 Server accessible from:');
   console.log('   - ws://localhost:3001 (local)');
-  console.log('   - ws://192.168.1.89:3001 (network)');
+  console.log('   - ws://192.168.1.129:3001 (network)');
   console.log('✅ Server ready - waiting for connections...');
 });

@@ -910,8 +910,13 @@ const ProfileScreen = () => {
 
         {/* App Info & Actions */}
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <Text style={styles.sectionTitle}>Settings & Support</Text>
           
+          <SettingItem
+            title="App Settings"
+            icon="⚙️"
+            onPress={() => navigation.navigate('Settings')}
+          />
           <SettingItem
             title="Help & Support"
             icon="❓"

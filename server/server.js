@@ -11,6 +11,9 @@ const WebSocket = require('ws');
 const http = require('http');
 require('dotenv').config();
 
+// Import dynamic configuration
+const CONFIG = require('../config/app.config.js');
+
 // Import models
 const User = require('./models/User');
 const Farm = require('./models/Farm');
@@ -35,16 +38,26 @@ const authenticateToken = (req, res, next) => {
 };
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/agriculture-app';
+const PORT = CONFIG.server.port;
+const JWT_SECRET = CONFIG.auth.jwtSecret;
+const MONGODB_URI = CONFIG.database.uri;
+
+// Log configuration for debugging
+console.log('🔧 Server Configuration:', {
+  port: PORT,
+  host: CONFIG.server.host,
+  ip: CONFIG.server.ip,
+  database: MONGODB_URI,
+  environment: CONFIG.app.environment,
+  features: Object.keys(CONFIG.features).filter(key => CONFIG.features[key]),
+});
 
 // In-memory storage for testing (fallback if MongoDB fails)
 const inMemoryUsers = [];
 const inMemoryFarms = [];
 
-// Connect to MongoDB with fallback
-mongoose.connect(MONGODB_URI)
+// Connect to MongoDB with dynamic configuration
+mongoose.connect(MONGODB_URI, CONFIG.database.options)
 .then(() => {
   console.log('Connected to MongoDB successfully');
   

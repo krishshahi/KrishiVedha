@@ -14,7 +14,8 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import AppNavigator from './navigation/AppNavigator';
 import { store, persistor } from './store';
-import { COLORS } from './constants/colors';
+import { useDynamicTheme } from './config/dynamicTheme';
+import { useDynamicI18n } from './config/dynamicI18n';
 import { appInitService } from './services/appInitService';
 import { mlCropAnalysisService } from './services/mlCropAnalysisService';
 import { iotIntegrationService } from './services/iotIntegrationService';
@@ -25,7 +26,10 @@ import { pushNotificationService } from './services/pushNotificationService';
  * Features: ML Analytics, IoT Integration, Offline-First, Real-time Sync
  */
 
-const App: React.FC = () => {
+// Theme Provider Component
+const ThemedApp: React.FC = () => {
+  const theme = useDynamicTheme();
+  const { t } = useDynamicI18n();
   const [isInitializing, setIsInitializing] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
 
@@ -35,7 +39,7 @@ const App: React.FC = () => {
 
   const initializeApp = async () => {
     try {
-      console.log('🚀 Starting KrishiVeda Enhanced App...');
+      console.log('🚀 Starting KrishiVeda Enhanced App with Dynamic Configuration...');
       
       // Initialize core app services
       await appInitService.initialize({
@@ -45,6 +49,9 @@ const App: React.FC = () => {
         autoSyncOnInit: true,
         backgroundSync: true,
       });
+      
+      console.log('🎨 Dynamic Theme Mode:', theme.mode);
+      console.log('🌍 Current Language:', t('common.loading'));
 
       // Initialize ML services in parallel
       const mlInitPromise = mlCropAnalysisService.initialize();
@@ -65,13 +72,15 @@ const App: React.FC = () => {
 
   // Loading screen during initialization
   if (isInitializing) {
+    const dynamicStyles = createDynamicStyles(theme);
+    
     return (
       <SafeAreaProvider>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingTitle}>KrishiVeda</Text>
-          <Text style={styles.loadingSubtitle}>Smart Farming Platform</Text>
-          <Text style={styles.loadingText}>Initializing ML Analytics & IoT Systems...</Text>
+        <View style={dynamicStyles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={dynamicStyles.loadingTitle}>KrishiVeda</Text>
+          <Text style={dynamicStyles.loadingSubtitle}>{t('common.loading')}</Text>
+          <Text style={dynamicStyles.loadingText}>Initializing ML Analytics & IoT Systems...</Text>
         </View>
       </SafeAreaProvider>
     );
@@ -79,87 +88,102 @@ const App: React.FC = () => {
 
   // Error screen if initialization failed
   if (initError) {
+    const dynamicStyles = createDynamicStyles(theme);
+    
     return (
       <SafeAreaProvider>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>⚠️ Initialization Error</Text>
-          <Text style={styles.errorText}>{initError}</Text>
-          <Text style={styles.errorSubtext}>Please restart the app</Text>
+        <View style={dynamicStyles.errorContainer}>
+          <Text style={dynamicStyles.errorTitle}>⚠️ {t('errors.unknownError')}</Text>
+          <Text style={dynamicStyles.errorText}>{initError}</Text>
+          <Text style={dynamicStyles.errorSubtext}>{t('errors.tryAgain')}</Text>
         </View>
       </SafeAreaProvider>
     );
   }
 
+  const dynamicStyles = createDynamicStyles(theme);
+  
   return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-            <SafeAreaView style={styles.container}>
-              <AppNavigator />
-            </SafeAreaView>
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </PersistGate>
-    </Provider>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar 
+          barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+          backgroundColor={theme.colors.primary} 
+        />
+        <SafeAreaView style={dynamicStyles.container}>
+          <AppNavigator />
+        </SafeAreaView>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 
-const styles = StyleSheet.create({
+// Dynamic styles function that creates styles based on current theme
+const createDynamicStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 20,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.lg,
   },
   loadingTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginTop: 20,
-    marginBottom: 8,
+    fontSize: theme.typography.fontSizes.xxxl,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.primary,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
   loadingSubtitle: {
-    fontSize: 18,
-    color: COLORS.text.secondary,
-    marginBottom: 20,
+    fontSize: theme.typography.fontSizes.lg,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.lg,
   },
   loadingText: {
-    fontSize: 16,
-    color: COLORS.text.primary,
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.text.primary,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: theme.spacing.sm,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 20,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.lg,
   },
   errorTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.error,
-    marginBottom: 16,
+    fontSize: theme.typography.fontSizes.xxl,
+    fontWeight: theme.typography.fontWeights.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.md,
   },
   errorText: {
-    fontSize: 16,
-    color: COLORS.text.primary,
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.text.primary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   errorSubtext: {
-    fontSize: 14,
-    color: COLORS.text.secondary,
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
 });
+
+// Main App component with theme and i18n providers
+const App: React.FC = () => {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <ThemedApp />
+      </PersistGate>
+    </Provider>
+  );
+};
 
 export default App;
