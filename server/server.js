@@ -9,7 +9,7 @@ const fs = require('fs');
 const os = require('os');
 const WebSocket = require('ws');
 const http = require('http');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Import dynamic configuration
 const CONFIG = require('../config/app.config.js');
@@ -19,19 +19,53 @@ const User = require('./models/User');
 const Farm = require('./models/Farm');
 const Crop = require('./models/Crop');
 const WeatherData = require('./models/WeatherData');
-const CommunityPost = require('./models/Community');
+const Post = require('./models/Post');
 
-// Middleware for authentication
+// Enhanced middleware for authentication with better debugging
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('🔐 === AUTH MIDDLEWARE DEBUG ===');
+  console.log('🔐 Auth header:', authHeader ? 'Bearer ' + token?.substring(0, 20) + '...' : 'missing');
+  console.log('🔐 JWT_SECRET length:', JWT_SECRET?.length || 'undefined');
+
   if (!token) {
-    return res.sendStatus(401);
+    console.log('🔐 ❌ No token provided');
+    return res.status(401).json({
+      success: false,
+      message: 'Access token required'
+    });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.log('🔐 ❌ JWT verification failed:', err.message);
+      console.log('🔐 Error name:', err.name);
+      
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Token expired'
+        });
+      }
+      
+      if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token'
+        });
+      }
+      
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication failed'
+      });
+    }
+    
+    console.log('🔐 ✅ JWT verified successfully');
+    console.log('🔐 User from token:', { userId: user.userId, email: user.email });
+    
     req.user = user;
     next();
   });
@@ -105,11 +139,18 @@ mongoose.connect(MONGODB_URI, CONFIG.database.options)
   });
 });
 
-// Create uploads directory if it doesn't exist
+// Create uploads directories if they don't exist
 const uploadsDir = path.join(__dirname, 'uploads');
+const postsUploadsDir = path.join(__dirname, 'uploads', 'posts');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log('📁 Created uploads directory');
+}
+
+if (!fs.existsSync(postsUploadsDir)) {
+  fs.mkdirSync(postsUploadsDir, { recursive: true });
+  console.log('📁 Created uploads/posts directory for community images');
 }
 
 // Multer configuration for image uploads
@@ -147,6 +188,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(uploadsDir));
+
+// Import and use community routes
+const communityRoutes = require('./routes/community');
+app.use('/api/community', communityRoutes);
 
 // API Routes
 
@@ -1358,12 +1403,30 @@ app.get('/api/farms/:id', async (req, res) => {
 // Create new farm
 app.post('/api/farms', async (req, res) => {
   try {
-    const { userId, name, location, area, crops } = req.body;
+    const { 
+      userId, name, location, area, crops, 
+      soilType, irrigationMethod, notes,
+      farmType, waterSource, isOrganic, elevation, climate,
+      contactPerson, phoneNumber, establishedYear, sizeUnit
+    } = req.body;
     
+    console.log('🚜 Creating farm with data:', {
+      userId, name, location, area, farmType, sizeUnit
+    });
+    
+    // Validate required fields
     if (!userId || !name || !location) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: userId, name, location'
+      });
+    }
+    
+    // Validate area
+    if (area && (isNaN(parseFloat(area)) || parseFloat(area) <= 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Area must be a positive number'
       });
     }
     
@@ -1376,26 +1439,68 @@ app.post('/api/farms', async (req, res) => {
       });
     }
     
-    const newFarm = new Farm({
-      name,
+    // Map sizeUnit from client to server format
+    const unitMapping = {
+      'acres': 'acres',
+      'hectares': 'hectares', 
+      'sqmeters': 'sqm'
+    };
+    
+    const farmData = {
+      name: name.trim(),
       location: {
-        address: location,
+        address: location.trim(),
         coordinates: {
           type: 'Point',
           coordinates: [0, 0] // Default coordinates, can be updated later
         }
       },
       size: {
-        value: area || 0,
-        unit: 'hectares'
+        value: area ? parseFloat(area) : 0,
+        unit: unitMapping[sizeUnit] || 'acres'
       },
       owner: userId,
-      farmType: 'crop',
-      crops: crops ? crops.map(crop => ({ name: crop })) : []
-    });
+      farmType: farmType || 'crop',
+      crops: crops ? crops.map(crop => ({ name: crop })) : [],
+      notes: notes ? notes.trim() : undefined
+    };
     
+    // Add irrigation system if provided
+    if (irrigationMethod || waterSource) {
+      farmData.irrigation = {};
+      if (irrigationMethod) {
+        const irrigationMapping = {
+          'Drip Irrigation': 'drip',
+          'Sprinkler': 'sprinkler', 
+          'Flood Irrigation': 'flood',
+          'Rain-fed': 'none',
+          'Canal Irrigation': 'flood',
+          'Tube Well': 'manual',
+          'River/Stream': 'manual',
+          'Mixed System': 'manual'
+        };
+        farmData.irrigation.system = irrigationMapping[irrigationMethod] || 'manual';
+      }
+      if (waterSource) {
+        farmData.irrigation.waterSource = waterSource;
+      }
+    }
+    
+    // Add established date if provided
+    if (establishedYear) {
+      const year = parseInt(establishedYear);
+      if (year >= 1900 && year <= new Date().getFullYear()) {
+        farmData.establishedDate = new Date(year, 0, 1); // January 1st of that year
+      }
+    }
+    
+    console.log('🚜 Final farm data for creation:', farmData);
+    
+    const newFarm = new Farm(farmData);
     const savedFarm = await newFarm.save();
     await savedFarm.populate('owner', 'username email');
+    
+    console.log('✅ Farm created successfully:', savedFarm._id);
     
     const formattedFarm = {
       id: savedFarm._id.toString(),
@@ -1414,10 +1519,24 @@ app.post('/api/farms', async (req, res) => {
       message: 'Farm created successfully'
     });
   } catch (error) {
-    console.error('Error creating farm:', error);
+    console.error('❌ Error creating farm:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(field => {
+        return `${field}: ${error.errors[field].message}`;
+      });
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Failed to create farm'
+      message: 'Failed to create farm. Please try again.'
     });
   }
 });
@@ -1659,7 +1778,10 @@ app.get('/api/weather', async (req, res) => {
 });
 
 // === COMMUNITY ENDPOINTS ===
+// NOTE: Community endpoints have been moved to routes/community.js
+// The old endpoints below are commented out to avoid conflicts
 
+/*
 // Get community posts
 app.get('/api/community/posts', async (req, res) => {
   try {
@@ -2134,6 +2256,7 @@ app.get('/api/community/expert-advice', async (req, res) => {
     });
   }
 });
+*/
 
 // Update farm
 app.put('/api/farms/:id', async (req, res) => {
@@ -2488,6 +2611,92 @@ app.post('/api/auth/verify', authenticateToken, (req, res) => {
     success: true,
     message: 'Token is valid',
     userId: req.user.userId
+  });
+});
+
+// Debug token endpoint - helps troubleshoot authentication issues
+app.post('/api/auth/debug-token', (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.json({
+        success: false,
+        error: 'no_token',
+        message: 'No token provided',
+        debug: {
+          authHeader: authHeader || 'missing',
+          tokenPresent: false
+        }
+      });
+    }
+    
+    // Decode without verification to see token contents
+    const decoded = jwt.decode(token);
+    if (!decoded) {
+      return res.json({
+        success: false,
+        error: 'malformed_token',
+        message: 'Token is malformed',
+        debug: {
+          tokenLength: token.length,
+          tokenStart: token.substring(0, 20) + '...'
+        }
+      });
+    }
+    
+    // Check expiration
+    const now = Math.floor(Date.now() / 1000);
+    const isExpired = decoded.exp && decoded.exp < now;
+    
+    // Try verification with actual secret
+    let verificationResult = null;
+    try {
+      verificationResult = jwt.verify(token, JWT_SECRET);
+    } catch (verifyError) {
+      verificationResult = { error: verifyError.message, name: verifyError.name };
+    }
+    
+    res.json({
+      success: false,
+      error: 'verification_failed',
+      message: 'Token verification details',
+      debug: {
+        decoded: {
+          userId: decoded.userId,
+          email: decoded.email,
+          issuedAt: new Date(decoded.iat * 1000),
+          expiresAt: new Date(decoded.exp * 1000),
+          isExpired
+        },
+        verification: verificationResult,
+        serverSecret: {
+          length: JWT_SECRET ? JWT_SECRET.length : 0,
+          present: !!JWT_SECRET
+        },
+        currentTime: new Date()
+      }
+    });
+    
+  } catch (error) {
+    res.json({
+      success: false,
+      error: 'debug_failed',
+      message: 'Debug process failed',
+      debug: {
+        error: error.message
+      }
+    });
+  }
+});
+
+// Force logout endpoint - clears authentication state
+app.post('/api/auth/logout', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Logout successful. Please clear local storage and re-authenticate.',
+    clearState: true
   });
 });
 

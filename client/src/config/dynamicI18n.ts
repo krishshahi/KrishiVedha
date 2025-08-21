@@ -3,6 +3,7 @@
  * Supports multiple languages with dynamic content loading
  */
 
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getConfig, updateConfig, subscribeToConfig } from './dynamicConfig';
 
@@ -920,7 +921,6 @@ class DynamicI18nManager {
 export const i18nManager = DynamicI18nManager.getInstance();
 
 // React Hook for components
-import React from 'react';
 
 export const useDynamicI18n = () => {
   const [language, setLanguage] = React.useState<LanguageCode>(i18nManager.getCurrentLanguage());

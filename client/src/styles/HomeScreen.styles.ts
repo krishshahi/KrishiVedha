@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 import { COLORS, SPACING, FONTS, SHADOWS, BORDER_RADIUS } from '../constants/theme';
 
 export const styles = StyleSheet.create({
@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     padding: SPACING.lg,
-    paddingTop: SPACING.xl,
+    paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight || 0) + SPACING.lg,
   },
   headerContent: {
     flexDirection: 'row',

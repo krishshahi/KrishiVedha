@@ -71,8 +71,6 @@ const BASE_CONFIG = {
   database: {
     uri: process.env.MONGODB_URI || `mongodb://localhost:27017/${process.env.DB_NAME || 'krishivedha'}`,
     options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: parseInt(process.env.DB_POOL_SIZE) || 10,
       serverSelectionTimeoutMS: parseInt(process.env.DB_TIMEOUT) || 5000,
     },

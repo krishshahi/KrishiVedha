@@ -69,11 +69,23 @@ class CommunityService {
   /**
    * Get all community posts
    */
-  async getAllPosts(): Promise<CommunityPost[]> {
+  async getAllPosts(): Promise<any[]> {
     try {
       // Try to fetch from API first
-      const posts = await apiService.getCommunityPosts();
-      return posts;
+      const posts = await apiService.getCommunityPosts({ limit: 20, page: 1 });
+      // Map the posts to include necessary fields
+      return posts.map(post => ({
+        ...post,
+        id: post._id || post.id,
+        authorName: post.author?.username || post.author?.name || 'Unknown',
+        authorId: post.author?._id || post.author?.id,
+        title: post.content?.substring(0, 50) + '...' || 'No title',
+        likes: post.likeCount || post.likes?.length || 0,
+        comments: post.commentCount || post.comments?.length || 0,
+        tags: post.tags || [],
+        createdAt: post.createdAt || new Date().toISOString(),
+        updatedAt: post.updatedAt || new Date().toISOString()
+      }));
     } catch (error) {
       console.warn('API not available, using mock data:', error);
       // Fallback to mock data if API is not available
@@ -86,10 +98,21 @@ class CommunityService {
   /**
    * Get posts by category
    */
-  async getPostsByCategory(category: string): Promise<CommunityPost[]> {
+  async getPostsByCategory(category: string): Promise<any[]> {
     try {
-      const posts = await apiService.getCommunityPosts({ category });
-      return posts;
+      const posts = await apiService.getCommunityPosts({ category, limit: 20, page: 1 });
+      return posts.map(post => ({
+        ...post,
+        id: post._id || post.id,
+        authorName: post.author?.username || post.author?.name || 'Unknown',
+        authorId: post.author?._id || post.author?.id,
+        title: post.content?.substring(0, 50) + '...' || 'No title',
+        likes: post.likeCount || post.likes?.length || 0,
+        comments: post.commentCount || post.comments?.length || 0,
+        tags: post.tags || [],
+        createdAt: post.createdAt || new Date().toISOString(),
+        updatedAt: post.updatedAt || new Date().toISOString()
+      }));
     } catch (error) {
       console.warn('API not available, using mock data:', error);
       return MOCK_POSTS.filter(post => post.tags.includes(category.toLowerCase()))
@@ -133,18 +156,30 @@ class CommunityService {
    * Create a new post
    */
   async createPost(postData: {
-    title: string;
+    title?: string;
     content: string;
-    authorId: string;
-    authorName: string;
+    authorId?: string;
+    authorName?: string;
     tags?: string[];
-  }): Promise<CommunityPost> {
+    category?: string;
+    images?: any[];
+  }): Promise<any> {
     try {
       const newPost = await apiService.createCommunityPost({
-        ...postData,
-        category: 'general'
+        content: postData.title ? `${postData.title}\n\n${postData.content}` : postData.content,
+        category: postData.category || 'General',
+        tags: postData.tags || [],
+        images: postData.images || []
       });
-      return newPost;
+      return {
+        ...newPost,
+        id: newPost._id || newPost.id,
+        authorName: newPost.author?.username || newPost.author?.name || postData.authorName || 'Unknown',
+        authorId: newPost.author?._id || newPost.author?.id || postData.authorId,
+        title: postData.title || newPost.content?.substring(0, 50) + '...',
+        likes: newPost.likeCount || 0,
+        comments: newPost.commentCount || 0
+      };
     } catch (error) {
       console.warn('API not available, using mock creation:', error);
       // Fallback to mock creation
@@ -218,15 +253,17 @@ class CommunityService {
   /**
    * Like a post
    */
-  async likePost(postId: string): Promise<void> {
+  async likePost(postId: string): Promise<{ likeCount: number; isLiked: boolean } | void> {
     try {
-      await apiService.likeCommunityPost(postId);
+      const result = await apiService.likeCommunityPost(postId);
+      return result;
     } catch (error) {
       console.warn('API not available, using mock like:', error);
       const post = MOCK_POSTS.find(p => p.id === postId);
       if (post) {
         post.likes += 1;
         await this.savePostsToStorage();
+        return { likeCount: post.likes, isLiked: true };
       }
     }
   }

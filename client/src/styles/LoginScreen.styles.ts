@@ -108,13 +108,15 @@ export const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: FONTS.size.sm,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: SPACING.xs,
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   forgotPasswordText: {
     color: COLORS.primary,
     fontSize: FONTS.size.sm,
+    fontWeight: '500',
   },
   loginButton: {
     backgroundColor: COLORS.primary,

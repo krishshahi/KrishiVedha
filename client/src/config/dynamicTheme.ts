@@ -3,6 +3,7 @@
  * Comprehensive theming with light/dark modes and customization
  */
 
+import React from 'react';
 import { Appearance, ColorSchemeName } from 'react-native';
 import { getConfig, updateConfig, subscribeToConfig } from './dynamicConfig';
 
@@ -559,7 +560,7 @@ export const withDynamicTheme = <P extends object>(
 ) => {
   return (props: P) => {
     const theme = useDynamicTheme();
-    return <Component {...props} theme={theme} />;
+    return React.createElement(Component, { ...props, theme } as P & { theme: DynamicTheme });
   };
 };
 
@@ -571,6 +572,3 @@ export {
   themeManager as default,
   DynamicThemeManager,
 };
-
-// Need to import React for hooks
-import React from 'react';

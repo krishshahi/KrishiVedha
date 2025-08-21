@@ -1,0 +1,104 @@
+
+> agriculture-app-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+🔧 Server Configuration: {
+  port: 3000,
+  host: '0.0.0.0',
+  ip: '10.10.13.97',
+  database: 'mongodb://localhost:27017/krishivedha',
+  environment: 'development',
+  features: [
+    'enableWeather',
+    'enableCommunity',
+    'enableAnalytics',
+    'enableNotifications'
+  ]
+}
+[AUTH] Initializing test users...
+🚀 Agriculture API Server running on port 3000
+📶 IoT WebSocket Server: DISABLED (enable by uncommenting WebSocket code)
+
+🌐 Network Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Primary IP: 10.10.13.97
+
+🔗 Available Network Interfaces:
+  en0: 10.10.13.97
+
+📱 Connection URLs:
+  Local: http://localhost:3000/api
+  Network: http://10.10.13.97:3000/api
+
+💡 Tips:
+  • Use the Network URL for mobile device connections
+  • If connection fails, try alternative URLs above
+  • Ensure your device is on the same network
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Available endpoints:
+  POST /api/auth/register - User registration
+  POST /api/auth/login - User login
+  POST /api/auth/verify - Verify JWT token
+  GET  /api/health - Health check
+  GET  /api/users - Get all users
+  GET  /api/users/:id - Get user by ID
+  PUT  /api/users/:id - Update user profile
+  GET  /api/users/:id/stats - Get user statistics
+  GET  /api/users/:id/farms - Get farms by user
+  GET  /api/farms - Get all farms
+  POST /api/farms - Create new farm
+  PUT  /api/farms/:id - Update farm
+  DELETE /api/farms/:id - Delete farm
+  GET  /api/crops - Get all crops
+  POST /api/crops - Create new crop
+  GET  /api/crops/:id/activities - Get crop activities
+  POST /api/crops/:id/activities - Add crop activity
+  PUT  /api/crops/:cropId/activities/:activityId - Update crop activity
+  DELETE /api/crops/:cropId/activities/:activityId - Delete crop activity
+  GET  /api/weather - Get weather data
+  GET  /api/community/posts - Get community posts
+  POST /api/community/posts - Create community post
+
+🤖 AI/ML Endpoints:
+  POST /api/ml/crop-health - AI crop health analysis
+  POST /api/ml/disease-detection - Disease detection & classification
+  POST /api/ml/yield-prediction - Yield forecasting
+  POST /api/ml/market-forecast - Market price prediction
+  POST /api/ml/soil-analysis - Soil health analysis
+  GET  /api/ml/metrics - ML model performance metrics
+
+🔌 IoT Integration Endpoints:
+  GET  /api/iot/devices - Get connected IoT devices
+  GET  /api/iot/devices/:id/status - Get device status
+  POST /api/iot/devices/register - Register new IoT device
+  PUT  /api/iot/devices/:id/config - Update device config
+  GET  /api/iot/sensors/data - Get all sensor data
+  GET  /api/iot/sensors/:deviceId/:sensorType/history - Get sensor history
+  GET  /api/iot/environment/:farmId - Get environmental data
+  GET  /api/iot/weather-station/:stationId - Get weather station data
+  POST /api/iot/irrigation/control - Control irrigation system
+  GET  /api/iot/irrigation/schedule - Get irrigation schedule
+  POST /api/iot/irrigation/optimize - Optimize irrigation schedule
+  GET  /api/iot/automation/rules - Get automation rules
+  POST /api/iot/automation/rules - Create automation rule
+  PUT  /api/iot/automation/rules/:id - Update automation rule
+  DELETE /api/iot/automation/rules/:id - Delete automation rule
+  GET  /api/iot/analytics/:farmId - Get IoT analytics
+  GET  /api/iot/energy/:farmId - Get energy consumption data
+
+🔌 WebSocket Endpoints:
+  WS   /iot/ws - IoT real-time data stream
+    Messages: authenticate, ping, subscribe, unsubscribe
+    Streams: sensor_data, alerts, device_status
+
+Connected to MongoDB successfully
+[AUTH] ✅ Test users created:
+[AUTH]   - test@example.com / password123
+[AUTH]   - demo@krishiveda.com / demo123
+[AUTH] Total users in database: 2

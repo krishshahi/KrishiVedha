@@ -9,7 +9,8 @@ import {
   RefreshControl, 
   ActivityIndicator,
   Dimensions,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '../store/hooks';
@@ -69,6 +70,8 @@ const WeatherScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState({ lat: 27.7172, lng: 85.3240 }); // Default to Kathmandu
   const [refreshing, setRefreshing] = useState(false);
+  const [userCrops, setUserCrops] = useState<any[]>([]);
+  const [farms, setFarms] = useState<any[]>([]);
   
   const navigation = useNavigation<any>();
   const { user } = useAppSelector((state) => state.auth);
@@ -91,12 +94,52 @@ const WeatherScreen = () => {
 
   useEffect(() => {
     fetchWeatherData();
+    fetchUserCrops();
   }, [fetchWeatherData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchWeatherData();
+    fetchUserCrops();
   }, [fetchWeatherData]);
+
+  const fetchUserCrops = async () => {
+    try {
+      console.log('🌾 Fetching user crops for weather impact analysis...');
+      
+      // First fetch farms
+      const farmsData = await apiService.getFarms();
+      console.log('🚜 Fetched', farmsData.length, 'farms');
+      setFarms(farmsData);
+      
+      // Then fetch crops for each farm
+      const allCrops = [];
+      for (const farm of farmsData) {
+        try {
+          const farmId = farm._id || farm.id;
+          const farmCrops = await apiService.getCrops(farmId);
+          console.log(`✅ Found ${farmCrops.length} crops for farm ${farm.name}`);
+          
+          // Add farm info to each crop for context
+          const cropsWithFarm = farmCrops.map(crop => ({
+            ...crop,
+            farmName: farm.name,
+            farmLocation: farm.location
+          }));
+          
+          allCrops.push(...cropsWithFarm);
+        } catch (err) {
+          console.warn(`Failed to fetch crops for farm ${farm.name}:`, err);
+        }
+      }
+      
+      console.log('🌾 Total crops found:', allCrops.length);
+      setUserCrops(allCrops);
+    } catch (err) {
+      console.error('Error fetching user crops:', err);
+      // Continue without crops data - weather will still work
+    }
+  };
 
   const handleLocationChange = async () => {
     try {
@@ -279,7 +322,13 @@ const WeatherScreen = () => {
   const weatherAlerts = generateWeatherAlerts();
 
   const generateFarmingImpact = () => {
-    if (!weatherData?.current || !user?.farms || user.farms.length === 0) return [];
+    if (!weatherData?.current) return [];
+    
+    // Check if we have any crops data
+    if (!userCrops || userCrops.length === 0) {
+      console.log('No crops found for farming impact analysis');
+      return [];
+    }
 
     const impacts = [];
     const temp = weatherData.current.temperature;
@@ -288,18 +337,29 @@ const WeatherScreen = () => {
     const condition = weatherData.current.condition?.toLowerCase() || '';
     const precipitation = weatherData.current.precipitationChance || 0;
 
-    // Get all unique crops from all farms
-    const allCrops = user.farms.flatMap(farm => farm.crops);
-    const uniqueCrops = allCrops.reduce((unique, crop) => {
-      if (!unique.find(c => c.name.toLowerCase() === crop.name.toLowerCase())) {
-        unique.push(crop);
+    // Get all unique crops
+    const uniqueCrops = userCrops.reduce((unique, crop) => {
+      const cropName = crop.name || crop.cropType || 'Unknown';
+      if (!unique.find(c => c.name.toLowerCase() === cropName.toLowerCase())) {
+        unique.push({
+          name: cropName,
+          variety: crop.variety,
+          stage: crop.growthStage || crop.status,
+          farmName: crop.farmName
+        });
       }
       return unique;
-    }, [] as { name: string; status: string }[]);
+    }, [] as any[]);
 
+    console.log('Generating impact for', uniqueCrops.length, 'unique crop types');
+    
     uniqueCrops.forEach((crop) => {
-      switch (crop.name.toLowerCase()) {
+      const cropName = crop.name.toLowerCase();
+      console.log('Analyzing weather impact for:', cropName);
+      
+      switch (cropName) {
           case 'rice':
+          case 'paddy':
             // Rice crops analysis
             if (condition.includes('rain') || precipitation > 30) {
               impacts.push({
@@ -350,26 +410,87 @@ const WeatherScreen = () => {
             }
             break;
           case 'wheat':
-            // Add wheat crops if temperature is suitable
-            if (temp < 25) {
+            // Wheat crops analysis
+            if (temp < 25 && temp > 5) {
               impacts.push({
                 crop: 'Wheat Crops',
                 icon: '🌾',
                 description: 'Cool temperatures are favorable for wheat growth. Monitor for pest activity and ensure adequate nutrition.'
               });
+            } else if (temp > 30) {
+              impacts.push({
+                crop: 'Wheat Crops',
+                icon: '🌾',
+                description: 'High temperatures may stress wheat plants. Increase irrigation frequency and provide shade if possible.'
+              });
             }
             break;
           case 'corn':
-            // Add corn crops for warmer weather
+          case 'maize':
+            // Corn/Maize crops analysis
             if (temp > 25 && temp < 35) {
               impacts.push({
                 crop: 'Corn Crops',
                 icon: '🌽',
                 description: 'Warm temperatures support corn growth. Ensure adequate water supply and monitor for pest damage.'
               });
+            } else if (temp < 15) {
+              impacts.push({
+                crop: 'Corn Crops',
+                icon: '🌽',
+                description: 'Cool temperatures may slow corn growth. Consider protective measures if frost is expected.'
+              });
+            }
+            break;
+          case 'tomato':
+          case 'tomatoes':
+            // Tomato crops analysis
+            if (temp > 20 && temp < 28 && humidity > 50 && humidity < 70) {
+              impacts.push({
+                crop: 'Tomato Crops',
+                icon: '🍅',
+                description: 'Ideal conditions for tomato growth. Monitor for signs of disease and maintain consistent watering.'
+              });
+            } else if (humidity > 80) {
+              impacts.push({
+                crop: 'Tomato Crops',
+                icon: '🍅',
+                description: 'High humidity increases risk of fungal diseases. Ensure good air circulation and consider fungicide application.'
+              });
+            }
+            break;
+          case 'onion':
+          case 'onions':
+            // Onion crops analysis
+            if (temp > 15 && temp < 25) {
+              impacts.push({
+                crop: 'Onion Crops',
+                icon: '🧅',
+                description: 'Good temperature range for onion bulb development. Maintain moderate soil moisture.'
+              });
             }
             break;
           default:
+            // Generic crop analysis for any other crops
+            if (!impacts.find(i => i.crop.toLowerCase().includes(cropName))) {
+              let description = `Current weather conditions for ${crop.name}.`;
+              
+              if (temp > 30) {
+                description = `High temperature detected. Monitor ${crop.name} for heat stress and increase irrigation.`;
+              } else if (precipitation > 50) {
+                description = `Rainfall expected. Good for ${crop.name} irrigation but watch for waterlogging.`;
+              } else if (humidity > 80) {
+                description = `High humidity may increase disease risk in ${crop.name}. Monitor closely.`;
+              } else {
+                description = `Moderate conditions for ${crop.name}. Continue regular care and monitoring.`;
+              }
+              
+              impacts.push({
+                crop: `${crop.name} Crops`,
+                icon: '🌱',
+                description
+              });
+            }
             break;
         }
     });
@@ -587,11 +708,21 @@ const WeatherScreen = () => {
             <View style={styles.impactItem}>
               <Text style={styles.impactIcon}>🌱</Text>
               <View style={styles.impactContent}>
-                <Text style={styles.impactTitle}>No Crops Registered</Text>
+                <Text style={styles.impactTitle}>No Crops Found</Text>
                 <Text style={styles.impactDescription}>
-                  Add crops to your farm profile to get personalized weather impact analysis and farming recommendations.
+                  {farms.length === 0 
+                    ? 'Add a farm and register crops to get personalized weather impact analysis.'
+                    : 'Add crops to your farms to get personalized weather impact analysis and farming recommendations.'}
                 </Text>
               </View>
+              <TouchableOpacity 
+                style={[styles.alertButton, { backgroundColor: COLORS.primary }]}
+                onPress={() => navigation.navigate(farms.length === 0 ? 'AddFarm' : 'AddCrop')}
+              >
+                <Text style={styles.alertButtonText}>
+                  {farms.length === 0 ? 'Add Farm' : 'Add Crop'}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -608,7 +739,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     padding: SPACING.lg,
-    paddingTop: SPACING.xl,
+    paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight || 0) + SPACING.lg,
   },
   headerTitle: {
     fontSize: FONTS.size.xxl,

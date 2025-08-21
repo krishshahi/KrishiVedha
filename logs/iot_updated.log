@@ -1,0 +1,6 @@
+🤖 IoT Development Server started on http://0.0.0.0:3001
+🔌 WebSocket upgrade available on ws://0.0.0.0:3001
+🌐 Server accessible from:
+   - ws://localhost:3001 (local)
+   - ws://192.168.1.129:3001 (network)
+✅ Server ready - waiting for connections...

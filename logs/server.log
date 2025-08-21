@@ -1,0 +1,447 @@
+
+> agriculture-app-backend@1.0.0 start
+> node server.js
+
+🔧 Server Configuration: {
+  port: 3000,
+  host: '0.0.0.0',
+  ip: '192.168.43.180',
+  database: 'mongodb://localhost:27017/krishivedha',
+  environment: 'development',
+  features: [
+    'enableWeather',
+    'enableCommunity',
+    'enableAnalytics',
+    'enableNotifications'
+  ]
+}
+[AUTH] Initializing test users...
+(node:6151) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6151) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+🚀 Agriculture API Server running on port 3000
+📶 IoT WebSocket Server: DISABLED (enable by uncommenting WebSocket code)
+
+🌐 Network Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Primary IP: 192.168.43.180
+
+🔗 Available Network Interfaces:
+  en0: 192.168.43.180
+
+📱 Connection URLs:
+  Local: http://localhost:3000/api
+  Network: http://192.168.43.180:3000/api
+
+💡 Tips:
+  • Use the Network URL for mobile device connections
+  • If connection fails, try alternative URLs above
+  • Ensure your device is on the same network
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Available endpoints:
+  POST /api/auth/register - User registration
+  POST /api/auth/login - User login
+  POST /api/auth/verify - Verify JWT token
+  GET  /api/health - Health check
+  GET  /api/users - Get all users
+  GET  /api/users/:id - Get user by ID
+  PUT  /api/users/:id - Update user profile
+  GET  /api/users/:id/stats - Get user statistics
+  GET  /api/users/:id/farms - Get farms by user
+  GET  /api/farms - Get all farms
+  POST /api/farms - Create new farm
+  PUT  /api/farms/:id - Update farm
+  DELETE /api/farms/:id - Delete farm
+  GET  /api/crops - Get all crops
+  POST /api/crops - Create new crop
+  GET  /api/crops/:id/activities - Get crop activities
+  POST /api/crops/:id/activities - Add crop activity
+  PUT  /api/crops/:cropId/activities/:activityId - Update crop activity
+  DELETE /api/crops/:cropId/activities/:activityId - Delete crop activity
+  GET  /api/weather - Get weather data
+  GET  /api/community/posts - Get community posts
+  POST /api/community/posts - Create community post
+
+🤖 AI/ML Endpoints:
+  POST /api/ml/crop-health - AI crop health analysis
+  POST /api/ml/disease-detection - Disease detection & classification
+  POST /api/ml/yield-prediction - Yield forecasting
+  POST /api/ml/market-forecast - Market price prediction
+  POST /api/ml/soil-analysis - Soil health analysis
+  GET  /api/ml/metrics - ML model performance metrics
+
+🔌 IoT Integration Endpoints:
+  GET  /api/iot/devices - Get connected IoT devices
+  GET  /api/iot/devices/:id/status - Get device status
+  POST /api/iot/devices/register - Register new IoT device
+  PUT  /api/iot/devices/:id/config - Update device config
+  GET  /api/iot/sensors/data - Get all sensor data
+  GET  /api/iot/sensors/:deviceId/:sensorType/history - Get sensor history
+  GET  /api/iot/environment/:farmId - Get environmental data
+  GET  /api/iot/weather-station/:stationId - Get weather station data
+  POST /api/iot/irrigation/control - Control irrigation system
+  GET  /api/iot/irrigation/schedule - Get irrigation schedule
+  POST /api/iot/irrigation/optimize - Optimize irrigation schedule
+  GET  /api/iot/automation/rules - Get automation rules
+  POST /api/iot/automation/rules - Create automation rule
+  PUT  /api/iot/automation/rules/:id - Update automation rule
+  DELETE /api/iot/automation/rules/:id - Delete automation rule
+  GET  /api/iot/analytics/:farmId - Get IoT analytics
+  GET  /api/iot/energy/:farmId - Get energy consumption data
+
+🔌 WebSocket Endpoints:
+  WS   /iot/ws - IoT real-time data stream
+    Messages: authenticate, ping, subscribe, unsubscribe
+    Streams: sensor_data, alerts, device_status
+
+Connected to MongoDB successfully
+[AUTH] ✅ Test users created:
+[AUTH]   - test@example.com / password123
+[AUTH]   - demo@krishiveda.com / demo123
+[AUTH] Total users in database: 2
+🔍 Login attempt: { email: 'test@example.com', passwordLength: 11 }
+🔍 Trying MongoDB...
+🔍 MongoDB user found: true
+🔍 MongoDB password valid: true
+🔍 Final result: { userFound: true, passwordValid: true, usingInMemory: false }
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg2NTYsImV4cCI6MTc1NjM1MzQ1Nn0.xbcncL-zPExen0QktMon1udHx0VVirjX9OT9zJBr_xE
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748656,
+  "exp": 1756353456
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 0 farms for user 68a5fe5b5567142ddfbdb63e
+🔍 Login attempt: { email: 'test@example.com', passwordLength: 11 }
+🔍 Trying MongoDB...
+🔍 MongoDB user found: true
+🔍 MongoDB password valid: true
+🔍 Final result: { userFound: true, passwordValid: true, usingInMemory: false }
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 0 farms for user 68a5fe5b5567142ddfbdb63e
+✅ Found 0 farms for user 68a5fe5b5567142ddfbdb63e
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg2NTYsImV4cCI6MTc1NjM1MzQ1Nn0.xbcncL-zPExen0QktMon1udHx0VVirjX9OT9zJBr_xE
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748656,
+  "exp": 1756353456
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 1 farms for user 68a5fe5b5567142ddfbdb63e
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 1 farms for user 68a5fe5b5567142ddfbdb63e
+✅ Found 1 farms for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69a680dcce0c791db0bed',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69a680dcce0c791db0bed'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69a680dcce0c791db0bed',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69a680dcce0c791db0bed'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 2 farms for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69a680dcce0c791db0bed',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69a680dcce0c791db0bed'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69ac90dcce0c791db0bfe',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69ac90dcce0c791db0bfe'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 2 farms for user 68a5fe5b5567142ddfbdb63e
+📤 Image upload request received
+📤 Content-Type: application/json
+📤 Request body keys: [ 'image' ]
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 2 farms for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69ac90dcce0c791db0bfe',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69ac90dcce0c791db0bfe'
+}
+✅ Found 1 crops for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69a680dcce0c791db0bed',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69a680dcce0c791db0bed'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+📋 Returning 0 activities
+📤 Image upload request received
+📤 Content-Type: application/json
+📤 Request body keys: [ 'image' ]
+🏡 === FARMS ENDPOINT DEBUG ===
+🏡 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🏡 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🏡 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🏡 Farms request: {
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Farms query: { isActive: { '$ne': false }, owner: '68a5fe5b5567142ddfbdb63e' }
+✅ Found 2 farms for user 68a5fe5b5567142ddfbdb63e
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69a680dcce0c791db0bed',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69a680dcce0c791db0bed'
+}
+🔒 === CROPS ENDPOINT DEBUG ===
+🔒 Request headers authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE1ZmU1YjU1NjcxNDJkZGZiZGI2M2UiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU3NDg3NDgsImV4cCI6MTc1NjM1MzU0OH0.KSNoldrBP2RT3nm3XBOzZ_st0NyI9FmL-sYVANbjiqM
+🔒 req.user object: {
+  "userId": "68a5fe5b5567142ddfbdb63e",
+  "email": "test@example.com",
+  "iat": 1755748748,
+  "exp": 1756353548
+}
+🔒 req.user?.userId: 68a5fe5b5567142ddfbdb63e
+🌾 Crops request: {
+  farmId: '68a69ac90dcce0c791db0bfe',
+  userId: undefined,
+  requestedUserId: '68a5fe5b5567142ddfbdb63e',
+  authenticatedUser: '68a5fe5b5567142ddfbdb63e'
+}
+🔍 Crops query: {
+  isActive: true,
+  owner: '68a5fe5b5567142ddfbdb63e',
+  farm: '68a69ac90dcce0c791db0bfe'
+}
+✅ Found 0 crops for user 68a5fe5b5567142ddfbdb63e
+✅ Found 1 crops for user 68a5fe5b5567142ddfbdb63e

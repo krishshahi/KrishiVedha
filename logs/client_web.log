@@ -1,0 +1,15 @@
+
+> MyReactNativeApp@0.0.1 web
+> npx expo start --web
+
+Starting project at /Users/bijayneupane/Desktop/untitled folder 3/KrishiVedha/client
+Starting Metro Bundler
+Unable to run simctl:
+Error: xcrun simctl help exited with non-zero code: 72
+The following packages should be updated for best compatibility with the installed expo version:
+  @react-native-community/datetimepicker@8.4.3 - expected version: 8.4.1
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web Bundling failed 2247ms client/index.web.js (880 modules)
+Unable to resolve "./TouchID" from "node_modules/react-native-touch-id/index.js"

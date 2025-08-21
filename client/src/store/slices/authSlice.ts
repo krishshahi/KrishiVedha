@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService, { ApiUser } from '../../services/apiService';
+import authService from '../../services/authService';
 import { LoginCredentials, RegisterData, User, UserRole } from '../../types/user.types';
 
 // Helper function to transform ApiUser to User
@@ -115,16 +116,15 @@ export const loginUser = createAsyncThunk(
         throw new Error('Unable to connect to server. Please check your network connection.');
       }
 
-      const response = await apiService.post('/auth/login', credentials);
-      const { token, user: apiUser } = response.data;
+      // Use apiService.login which handles token storage through authService
+      const { token, user: apiUser } = await apiService.login(credentials);
 
       // Transform the user object and fetch farms
       const user = transformApiUserToUser(apiUser);
       const apiFarms = await apiService.getFarmsByUserId(user.id);
       user.farms = apiFarms.map(transformApiFarmToFarm);
 
-      // Store in AsyncStorage
-      await AsyncStorage.setItem('userToken', token);
+      // Store user data in AsyncStorage (token is already stored by authService)
       await AsyncStorage.setItem('userData', JSON.stringify(user));
 
       return { token, user };
@@ -156,11 +156,12 @@ export const registerUser = createAsyncThunk(
         throw new Error('Unable to connect to server. Please check your network connection.');
       }
 
-      const response = await apiService.post('/auth/register', userData);
-      const { token, user } = response.data;
+      const { token, user: apiUser } = await apiService.register(userData);
+      
+      // Transform the user object
+      const user = transformApiUserToUser(apiUser);
 
-      // Store in AsyncStorage
-      await AsyncStorage.setItem('userToken', token);
+      // Store user data in AsyncStorage (token is already stored by authService via apiService.register)
       await AsyncStorage.setItem('userData', JSON.stringify(user));
 
       return { token, user };
@@ -186,7 +187,8 @@ export const loadStoredAuth = createAsyncThunk(
   'auth/loadStored',
   async (_, { rejectWithValue }) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      // Use authService to get token consistently
+      const token = await authService.getTokenAsync();
       const userData = await AsyncStorage.getItem('userData');
       
       if (token && userData) {
@@ -212,7 +214,7 @@ export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      await AsyncStorage.removeItem('userToken');
+      await authService.clearStoredTokens();
       await AsyncStorage.removeItem('userData');
       return null;
     } catch (error) {
@@ -306,6 +308,108 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
+// Forgot Password Actions
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      // Check if backend is available
+      const isHealthy = await apiService.healthCheck();
+      if (!isHealthy) {
+        throw new Error('Unable to connect to server. Please check your network connection.');
+      }
+
+      const result = await apiService.forgotPassword(email);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      return { message: result.message };
+    } catch (error: any) {
+      let message = 'An unexpected error occurred';
+      
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        message = 'Unable to connect to server. Please check your network connection.';
+      } else if (error.response?.status === 404) {
+        message = 'No account found with this email address.';
+      } else if (error.response?.status === 429) {
+        message = 'Too many requests. Please try again later.';
+      } else if (error.message) {
+        message = error.message;
+      }
+      
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, newPassword }: { token: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      // Check if backend is available
+      const isHealthy = await apiService.healthCheck();
+      if (!isHealthy) {
+        throw new Error('Unable to connect to server. Please check your network connection.');
+      }
+
+      const result = await apiService.resetPassword(token, newPassword);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      return { message: result.message };
+    } catch (error: any) {
+      let message = 'An unexpected error occurred';
+      
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        message = 'Unable to connect to server. Please check your network connection.';
+      } else if (error.response?.status === 400) {
+        message = 'Invalid or expired reset token.';
+      } else if (error.response?.status === 422) {
+        message = 'Password does not meet requirements.';
+      } else if (error.message) {
+        message = error.message;
+      }
+      
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const verifyResetToken = createAsyncThunk(
+  'auth/verifyResetToken',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      // Check if backend is available
+      const isHealthy = await apiService.healthCheck();
+      if (!isHealthy) {
+        throw new Error('Unable to connect to server. Please check your network connection.');
+      }
+
+      const result = await apiService.verifyResetToken(token);
+      
+      if (!result.valid) {
+        throw new Error(result.message || 'Invalid or expired reset token');
+      }
+      
+      return { valid: true, message: result.message };
+    } catch (error: any) {
+      let message = 'An unexpected error occurred';
+      
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        message = 'Unable to connect to server. Please check your network connection.';
+      } else if (error.message) {
+        message = error.message;
+      }
+      
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -325,10 +429,40 @@ const authSlice = createSlice({
       state.userStats = null;
     },
     setNotificationPreference: (state, action: PayloadAction<{ key: string; value: boolean }>) => {
-      if (state.user && state.user.preferences) {
-        (state.user.preferences as any)[action.payload.key] = action.payload.value;
-        // Update AsyncStorage with the modified user data
-        AsyncStorage.setItem('userData', JSON.stringify(state.user));
+      if (state.user) {
+        // Initialize preferences if they don't exist
+        if (!state.user.preferences) {
+          state.user.preferences = {
+            weatherAlerts: true,
+            cropReminders: true,
+            communityUpdates: true,
+            notificationsEnabled: true
+          };
+        }
+        
+        // Create a new preferences object with Immer-safe mutation
+        const currentPreferences = state.user.preferences || {};
+        const newPreferences = {
+          weatherAlerts: currentPreferences.weatherAlerts ?? true,
+          cropReminders: currentPreferences.cropReminders ?? true,
+          communityUpdates: currentPreferences.communityUpdates ?? true,
+          notificationsEnabled: currentPreferences.notificationsEnabled ?? true,
+          // Apply the new value
+          [action.payload.key]: action.payload.value
+        };
+        
+        // Update the state
+        state.user.preferences = newPreferences;
+        
+        // Update AsyncStorage with the modified user data (async operation outside reducer)
+        setTimeout(() => {
+          try {
+            const userToStore = { ...state.user };
+            AsyncStorage.setItem('userData', JSON.stringify(userToStore));
+          } catch (error) {
+            console.error('Failed to update AsyncStorage in setNotificationPreference:', error);
+          }
+        }, 0);
       }
     },
   },
@@ -421,6 +555,45 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Forgot password
+      .addCase(forgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Reset password
+      .addCase(resetPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Verify reset token
+      .addCase(verifyResetToken.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(verifyResetToken.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(verifyResetToken.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

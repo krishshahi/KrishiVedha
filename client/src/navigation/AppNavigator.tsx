@@ -15,13 +15,16 @@ import HomeScreen from '../screens/HomeScreen';
 import WeatherScreen from '../screens/WeatherScreen';
 import CropManagementScreen from '../screens/CropManagementScreen';
 import CommunityScreen from '../screens/CommunityScreen';
+import CommunityScreenFixed from '../screens/CommunityScreenFixed';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import ViewProfileScreen from '../screens/ViewProfileScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddCropScreen from '../screens/AddCropScreen';
 import CropDetailScreen from '../screens/CropDetailScreen';
 import AddFarmScreen from '../screens/AddFarmScreen';
+import FarmDetailScreen from '../screens/FarmDetailScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import IoTDashboardScreen from '../screens/IoTDashboardScreen';
 
@@ -95,12 +98,28 @@ const CropsStack = () => {
       screenOptions={{
         headerStyle: { backgroundColor: theme.colors.primary },
         headerTintColor: theme.colors.text.primaryWhite,
+        headerBackTitle: 'Back',
+        headerBackTitleVisible: true,
       }}
     >
       <Stack.Screen name="CropsMain" component={CropManagementScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddFarm" component={AddFarmScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddCrop" component={AddCropScreen} options={{ title: t('crop.addCrop') }} />
-      <Stack.Screen name="CropDetail" component={CropDetailScreen} options={{ title: t('crop.title') }} />
+      <Stack.Screen 
+        name="CropDetail" 
+        component={CropDetailScreen} 
+        options={({ route }) => ({ 
+          title: 'Crop Details',
+          headerShown: true,
+        })} 
+      />
+      <Stack.Screen 
+        name="FarmDetail" 
+        component={FarmDetailScreen} 
+        options={({ route }) => ({ 
+          headerShown: false,  // Hide the default header since we have a custom one
+        })} 
+      />
     </Stack.Navigator>
   );
 };
@@ -117,8 +136,9 @@ const CommunityStack = () => {
         headerTintColor: theme.colors.text.primaryWhite,
       }}
     >
-      <Stack.Screen name="CommunityMain" component={CommunityScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityMain" component={CommunityScreenFixed} options={{ headerShown: false }} />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: t('community.posts') }} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

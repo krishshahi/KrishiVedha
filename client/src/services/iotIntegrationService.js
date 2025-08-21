@@ -2,16 +2,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class IoTIntegrationService {
   constructor() {
-    this.baseUrl = 'http://10.10.13.110:3000/api';
-    this.wsUrl = 'ws://10.10.13.110:3000/iot/ws';
+    // Use dynamic IP configuration
+    this.baseUrl = 'http://10.10.13.97:3000/api';
+    this.wsUrl = 'ws://10.10.13.97:3001'; // IoT server runs on port 3001
     this.sensorData = new Map();
     this.deviceConnections = new Map();
     this.automationRules = new Map();
     this.alertThresholds = new Map();
     this.isConnected = false;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
+    this.maxReconnectAttempts = 3; // Reduced for faster fallback
     this.initialized = false;
+    this.useMockData = false;
     
     // Don't auto-initialize in constructor to prevent startup errors
     // this.initializeWebSocket();
@@ -46,12 +48,24 @@ class IoTIntegrationService {
   // WebSocket Connection Management
   initializeWebSocket() {
     try {
+      console.log('🔌 Attempting to connect to IoT WebSocket:', this.wsUrl);
       this.ws = new WebSocket(this.wsUrl);
       
+      // Set connection timeout
+      const connectionTimeout = setTimeout(() => {
+        if (this.ws.readyState === WebSocket.CONNECTING) {
+          console.log('⏰ WebSocket connection timeout, falling back to mock data');
+          this.ws.close();
+          this.enableMockMode();
+        }
+      }, 5000);
+      
       this.ws.onopen = () => {
-        console.log('🔌 IoT WebSocket connected');
+        clearTimeout(connectionTimeout);
+        console.log('🔌 IoT WebSocket connected successfully to', this.wsUrl);
         this.isConnected = true;
         this.reconnectAttempts = 0;
+        this.useMockData = false;
         this.authenticateConnection();
         this.subscribeToDevices();
       };
@@ -66,17 +80,20 @@ class IoTIntegrationService {
       };
 
       this.ws.onclose = () => {
+        clearTimeout(connectionTimeout);
         console.log('🔌 IoT WebSocket disconnected');
         this.isConnected = false;
         this.attemptReconnect();
       };
 
       this.ws.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         console.error('IoT WebSocket error:', error);
+        this.enableMockMode();
       };
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
-      this.fallbackToPolling();
+      this.enableMockMode();
     }
   }
 
@@ -84,17 +101,141 @@ class IoTIntegrationService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`🔄 Attempting IoT reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-      setTimeout(() => this.initializeWebSocket(), 5000 * this.reconnectAttempts);
+      setTimeout(() => this.initializeWebSocket(), 3000 * this.reconnectAttempts);
     } else {
-      console.log('❌ Max reconnect attempts reached, falling back to polling');
-      this.fallbackToPolling();
+      console.log('❌ Max reconnect attempts reached, enabling mock mode');
+      this.enableMockMode();
     }
   }
 
-  fallbackToPolling() {
-    setInterval(() => {
-      this.fetchAllSensorData();
-    }, 30000); // Poll every 30 seconds
+  enableMockMode() {
+    if (this.useMockData) {
+      return; // Already in mock mode
+    }
+    
+    console.log('🎭 Enabling IoT mock mode with simulated data');
+    this.useMockData = true;
+    this.isConnected = false;
+    
+    // Generate mock sensor data periodically (less frequently to reduce log spam)
+    if (!this.mockDataInterval) {
+      this.mockDataInterval = setInterval(() => {
+        this.generateMockSensorData();
+      }, 30000); // Update every 30 seconds instead of 10
+    }
+    
+    // Initialize with some mock data immediately
+    this.generateMockSensorData();
+    this.generateMockDevices();
+    this.generateMockAutomationRules();
+    
+    console.log('✅ Mock mode enabled - IoT Dashboard will show simulated data');
+  }
+  
+  generateMockSensorData() {
+    const mockDevices = ['sensor-001', 'sensor-002', 'sensor-003'];
+    const sensorTypes = ['temperature', 'humidity', 'soilMoisture', 'lightIntensity', 'ph'];
+    
+    mockDevices.forEach(deviceId => {
+      if (!this.sensorData.has(deviceId)) {
+        this.sensorData.set(deviceId, new Map());
+      }
+      
+      sensorTypes.forEach(sensorType => {
+        let value;
+        switch (sensorType) {
+          case 'temperature':
+            value = 18 + Math.random() * 15; // 18-33°C
+            break;
+          case 'humidity':
+            value = 40 + Math.random() * 40; // 40-80%
+            break;
+          case 'soilMoisture':
+            value = 30 + Math.random() * 50; // 30-80%
+            break;
+          case 'lightIntensity':
+            value = 200 + Math.random() * 800; // 200-1000 lux
+            break;
+          case 'ph':
+            value = 5.5 + Math.random() * 2.5; // 5.5-8.0 pH
+            break;
+          default:
+            value = Math.random() * 100;
+        }
+        
+        this.sensorData.get(deviceId).set(sensorType, {
+          value: parseFloat(value.toFixed(2)),
+          timestamp: Date.now(),
+          location: `Field ${deviceId.split('-')[1]}`,
+          quality: 'good',
+          trend: 'stable'
+        });
+      });
+    });
+  }
+  
+  generateMockDevices() {
+    const mockDevices = [
+      {
+        id: 'sensor-001',
+        name: 'Temperature Sensor 1',
+        type: 'Temperature/Humidity Sensor',
+        status: 'online',
+        batteryLevel: 85,
+        lastSeen: new Date()
+      },
+      {
+        id: 'sensor-002', 
+        name: 'Soil Monitor 1',
+        type: 'Soil Moisture Sensor',
+        status: 'online',
+        batteryLevel: 72,
+        lastSeen: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
+      },
+      {
+        id: 'irrigation-001',
+        name: 'Smart Irrigation Valve',
+        type: 'Irrigation Controller', 
+        status: 'offline',
+        batteryLevel: 0, // Mains powered
+        lastSeen: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
+      }
+    ];
+    
+    mockDevices.forEach(device => {
+      this.deviceConnections.set(device.id, device);
+    });
+  }
+  
+  generateMockAutomationRules() {
+    const mockRules = [
+      {
+        id: 'rule-001',
+        name: 'Smart Irrigation',
+        condition: 'Soil moisture < 30%',
+        action: 'Start irrigation for 15 minutes',
+        enabled: true,
+        lastTriggered: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+      },
+      {
+        id: 'rule-002',
+        name: 'High Temperature Alert',
+        condition: 'Temperature > 35°C',
+        action: 'Send notification to farmer',
+        enabled: true
+      },
+      {
+        id: 'rule-003',
+        name: 'Low Battery Warning',
+        condition: 'Battery level < 20%',
+        action: 'Send maintenance alert',
+        enabled: false
+      }
+    ];
+    
+    mockRules.forEach(rule => {
+      this.automationRules.set(rule.id, rule);
+    });
   }
 
   async authenticateConnection() {
@@ -208,22 +349,46 @@ class IoTIntegrationService {
   // Add alias method for dashboard compatibility
   async getSensorData(farmId = null) {
     console.log('📊 Getting sensor data for dashboard...');
+    
+    // If we're already in mock mode, return mock data immediately
+    if (this.useMockData) {
+      console.log('📊 Using mock sensor data (mock mode enabled)');
+      const result = this.generateMockSensorData();
+      return result.success ? [result.data] : [];
+    }
+    
     try {
-      // If farmId is provided, try to get farm-specific data
+      // Set a quick timeout for the network request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      let response;
       if (farmId) {
-        const response = await fetch(`${this.baseUrl}/iot/sensors/farm/${farmId}`);
-        if (response.ok) {
-          const result = await response.json();
-          // Return array of sensor data for dashboard compatibility
-          return result.success ? [result.data] : [];
-        }
+        response = await fetch(`${this.baseUrl}/iot/sensors/farm/${farmId}`, {
+          signal: controller.signal
+        });
+      } else {
+        response = await fetch(`${this.baseUrl}/iot/sensors/data`, {
+          signal: controller.signal
+        });
       }
       
-      // Fallback to general sensor data
-      const result = await this.fetchAllSensorData();
-      return result.success ? [result.data] : [];
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('📊 Successfully fetched real sensor data');
+        return result.success ? [result.data] : [];
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
-      console.error('Error getting sensor data:', error);
+      // Only log the error once, then enable mock mode
+      if (!this.useMockData) {
+        console.warn('⚠️ Network request failed, switching to mock data mode:', error.message);
+        this.enableMockMode();
+      }
+      
       const result = this.generateMockSensorData();
       return result.success ? [result.data] : [];
     }
@@ -232,20 +397,40 @@ class IoTIntegrationService {
   // Add missing method for getting connected devices
   async getConnectedDevices(farmId = null) {
     console.log('🔌 Getting connected devices...');
-    try {
-      const response = await fetch(`${this.baseUrl}/iot/devices${farmId ? `?farmId=${farmId}` : ''}`);
-      if (response.ok) {
-        const result = await response.json();
-        console.log('📱 Connected devices API response:', result);
-        // Ensure we always return an array
-        const devices = result.success ? (result.devices || result.data || []) : [];
-        return Array.isArray(devices) ? devices : [];
-      }
-      
+    
+    // If we're already in mock mode, return mock data immediately
+    if (this.useMockData) {
+      console.log('🔌 Using mock device data (mock mode enabled)');
       const mockResult = this.generateMockConnectedDevices(farmId);
       return Array.isArray(mockResult.devices) ? mockResult.devices : [];
+    }
+    
+    try {
+      // Set a quick timeout for the network request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(`${this.baseUrl}/iot/devices${farmId ? `?farmId=${farmId}` : ''}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🔌 Successfully fetched real device data');
+        const devices = result.success ? (result.devices || result.data || []) : [];
+        return Array.isArray(devices) ? devices : [];
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
-      console.error('Error fetching connected devices:', error);
+      // Only log the error once, then enable mock mode
+      if (!this.useMockData) {
+        console.warn('⚠️ Device API request failed, switching to mock data mode:', error.message);
+        this.enableMockMode();
+      }
+      
       const mockResult = this.generateMockConnectedDevices(farmId);
       return Array.isArray(mockResult.devices) ? mockResult.devices : [];
     }
@@ -254,20 +439,40 @@ class IoTIntegrationService {
   // Add missing method for getting automation rules  
   async getAutomationRules(farmId = null) {
     console.log('🤖 Getting automation rules...');
-    try {
-      const response = await fetch(`${this.baseUrl}/iot/automation/rules${farmId ? `?farmId=${farmId}` : ''}`);
-      if (response.ok) {
-        const result = await response.json();
-        console.log('⚙️ Automation rules API response:', result);
-        // Ensure we always return an array
-        const rules = result.success ? (result.data || result.rules || []) : [];
-        return Array.isArray(rules) ? rules : [];
-      }
-      
+    
+    // If we're already in mock mode, return mock data immediately
+    if (this.useMockData) {
+      console.log('🤖 Using mock automation rules (mock mode enabled)');
       const mockResult = this.generateMockAutomationRules(farmId);
       return Array.isArray(mockResult) ? mockResult : [];
+    }
+    
+    try {
+      // Set a quick timeout for the network request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(`${this.baseUrl}/iot/automation/rules${farmId ? `?farmId=${farmId}` : ''}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🤖 Successfully fetched real automation rules');
+        const rules = result.success ? (result.data || result.rules || []) : [];
+        return Array.isArray(rules) ? rules : [];
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (error) {
-      console.error('Error fetching automation rules:', error);
+      // Only log the error once, then enable mock mode
+      if (!this.useMockData) {
+        console.warn('⚠️ Automation rules API request failed, switching to mock data mode:', error.message);
+        this.enableMockMode();
+      }
+      
       const mockResult = this.generateMockAutomationRules(farmId);
       return Array.isArray(mockResult) ? mockResult : [];
     }

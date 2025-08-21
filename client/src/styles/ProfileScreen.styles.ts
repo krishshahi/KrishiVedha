@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 import { COLORS } from '../constants/colors';
 
 // Hardcoded theme values to avoid undefined errors
@@ -30,7 +30,8 @@ export const profileScreenStyles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.xxl,
+    paddingTop: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 0) + SPACING.lg,
+    paddingBottom: SPACING.xxl,
     paddingHorizontal: SPACING.lg,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,

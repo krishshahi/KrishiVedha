@@ -3,7 +3,7 @@ import { getApiBaseUrl, autoDetectApiUrl } from './network';
 // Simple API configuration object
 export const apiConfig = {
   // Default base URL - will be overridden by dynamic detection
-  baseURL: 'http://192.168.1.129:3000/api',
+  baseURL: 'http://10.10.13.97:3000/api',
   
   // Timeout configurations
   timeout: 10000, // 10 seconds

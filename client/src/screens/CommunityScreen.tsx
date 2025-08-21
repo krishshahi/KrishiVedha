@@ -9,11 +9,15 @@ import {
   Alert,
   RefreshControl,
   FlatList,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { communityScreenStyles as styles } from '../styles/CommunityScreen.styles';
 import { COLORS } from '../constants/colors';
+import apiService from '../services/apiService';
 import { 
   fetchCommunityPosts, 
   createCommunityPost, 

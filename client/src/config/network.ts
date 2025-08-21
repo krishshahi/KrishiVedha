@@ -75,10 +75,11 @@ const getCurrentIP = async (): Promise<string> => {
 
   // Final fallback to common development IPs
   const fallbackIPs = [
-    '192.168.1.129', // Current development machine IP
-    '192.168.1.1',   // Common home router IP
-    '192.168.0.1',   // Another common router IP
-    '10.0.0.1',      // Corporate network
+    '10.10.13.97',    // Current development machine IP
+    '192.168.43.180', // Previous development machine IP
+    '192.168.1.1',    // Common home router IP
+    '192.168.0.1',    // Another common router IP
+    '10.0.0.1',       // Corporate network
     '172.16.0.1',    // Private network
     'localhost'      // Local development
   ];
@@ -155,7 +156,7 @@ export const getNetworkConfig = async () => {
 export const NetworkConfig = {
   // Development URLs
   development: {
-    localhost: 'http://192.168.1.129:3000/api',
+    localhost: 'http://10.10.13.97:3000/api',
     currentIP: 'http://dynamic-ip:3000/api', // Placeholder - use getNetworkConfig() for actual IP
     androidEmulator: `http://${getAndroidEmulatorIP()}:3000/api`,
     tunnelUrl: '', // Will be populated by Expo tunnel if used

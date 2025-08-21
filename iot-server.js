@@ -11,8 +11,97 @@ const WEBSOCKET_MAGIC_STRING = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 const server = http.createServer((req, res) => {
   // Handle regular HTTP requests
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('IoT Development Server Running');
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
+  // Mock IoT API endpoints
+  if (url.pathname === '/api/iot/sensors/data') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      data: {
+        temperature: 25.8 + Math.random() * 8 - 4,
+        humidity: 62 + Math.random() * 20 - 10,
+        soilMoisture: 48 + Math.random() * 20 - 10,
+        lightIntensity: 850 + Math.random() * 300 - 150,
+        ph: 6.7 + Math.random() * 1.0 - 0.5,
+        timestamp: new Date()
+      }
+    }));
+  } else if (url.pathname === '/api/iot/devices') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      devices: [
+        {
+          id: 'temp-sensor-01',
+          name: 'Temperature Sensor 1',
+          type: 'Environmental Sensor',
+          status: 'online',
+          batteryLevel: 87,
+          lastSeen: new Date()
+        },
+        {
+          id: 'soil-sensor-01',
+          name: 'Soil Moisture Sensor 1', 
+          type: 'Soil Monitor',
+          status: 'online',
+          batteryLevel: 72,
+          lastSeen: new Date(Date.now() - 2 * 60 * 1000)
+        },
+        {
+          id: 'irrigation-01',
+          name: 'Smart Irrigation Controller',
+          type: 'Irrigation System',
+          status: 'offline',
+          batteryLevel: 0,
+          lastSeen: new Date(Date.now() - 45 * 60 * 1000)
+        }
+      ]
+    }));
+  } else if (url.pathname === '/api/iot/automation/rules') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      data: [
+        {
+          id: 'auto-irrigation-01',
+          name: 'Smart Irrigation Control',
+          condition: 'Soil moisture < 35%',
+          action: 'Start irrigation for 20 minutes',
+          enabled: true,
+          lastTriggered: new Date(Date.now() - 3 * 60 * 60 * 1000)
+        },
+        {
+          id: 'temp-alert-01',
+          name: 'High Temperature Warning',
+          condition: 'Temperature > 35°C',
+          action: 'Send alert notification',
+          enabled: true
+        },
+        {
+          id: 'battery-warning-01',
+          name: 'Low Battery Alert',
+          condition: 'Device battery < 15%',
+          action: 'Send maintenance notification',
+          enabled: false
+        }
+      ]
+    }));
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('🤖 IoT Development Server Running\n\nAvailable endpoints:\n- /api/iot/sensors/data\n- /api/iot/devices\n- /api/iot/automation/rules');
+  }
 });
 
 // Handle WebSocket upgrade

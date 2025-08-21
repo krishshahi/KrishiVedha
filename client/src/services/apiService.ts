@@ -2,6 +2,7 @@ import axios, { AxiosResponse, AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { autoDetectApiUrl, getApiBaseUrl } from '../config/network';
+import authService from './authService';
 
 // API client instance (will be initialized asynchronously)
 let apiClient: AxiosInstance | null = null;
@@ -95,9 +96,12 @@ const setupInterceptors = (client: AxiosInstance) => {
   client.interceptors.request.use(
     async (config) => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await authService.getTokenAsync();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔐 API Request with token:', config.method?.toUpperCase(), config.url, 'Token:', token.substring(0, 20) + '...');
+        } else {
+          console.warn('⚠️ API Request without token:', config.method?.toUpperCase(), config.url);
         }
       } catch (error) {
         console.error('Error getting auth token:', error);
@@ -115,17 +119,57 @@ const setupInterceptors = (client: AxiosInstance) => {
     async (error) => {
       // Enhanced error logging for debugging
       if (error.response) {
-        console.error('🚨 API Response Error:', {
-          status: error.response.status,
-          data: error.response.data,
-          url: error.config?.url,
-          method: error.config?.method?.toUpperCase()
-        });
+        // Suppress logging for known missing endpoints that we handle gracefully
+        const knownMissingEndpoints = [
+          '/community/events',
+          '/market/prices',
+          '/market/trends',
+          '/iot/devices',
+          '/iot/readings'
+        ];
+        
+        const url = error.config?.url || '';
+        const isKnownMissing = knownMissingEndpoints.some(endpoint => url.includes(endpoint));
+        
+        // Only log errors for endpoints that aren't known to be missing
+        if (!isKnownMissing || error.response.status !== 404) {
+          console.error('🚨 API Response Error:', {
+            status: error.response.status,
+            data: error.response.data,
+            url: error.config?.url,
+            method: error.config?.method?.toUpperCase()
+          });
+        }
         
         if (error.response.status === 401) {
-          // Token expired or invalid - clear stored token
-          await AsyncStorage.removeItem('userToken');
-          console.log('🔑 Auth token cleared due to 401 error');
+          const url = error.config?.url || '';
+          const isAuthEndpoint = url.includes('/auth/') || url.includes('/verify');
+          const errorData = error.response.data;
+          
+          // Check if this is an "Invalid token" error (signature mismatch)
+          if (errorData?.message === 'Invalid token' || 
+              errorData?.message === 'Authentication failed') {
+            console.log('🔑 Invalid token detected, clearing authentication state...');
+            
+            try {
+              // Import the auth recovery utility
+              const { clearAuthenticationState } = await import('../utils/authRecovery');
+              await clearAuthenticationState();
+              
+              // Also clear the auth service state
+              await authService.clearStoredTokens();
+              
+              console.log('✅ Authentication state cleared due to invalid token');
+              console.log('🔄 User should be redirected to login');
+            } catch (clearError) {
+              console.error('❌ Failed to clear authentication state:', clearError);
+            }
+          } else if (isAuthEndpoint) {
+            console.log('🔑 Clearing tokens due to 401 on auth endpoint:', url);
+            await authService.clearStoredTokens();
+          } else {
+            console.warn('⚠️ 401 error on non-auth endpoint, token may be expired:', url);
+          }
         }
       } else if (error.request) {
         console.error('🌐 Network Error:', {
@@ -243,7 +287,12 @@ class ApiService {
     try {
       const client = await getApiClient();
       const response = await client.post('/auth/register', userData);
-      return response.data;
+      const { token, user } = response.data;
+      
+      // Use authService to store tokens properly
+      await authService.storeTokens(token, null);
+      
+      return { token, user };
     } catch (error: any) {
       console.error('Registration error:', error);
       throw error;
@@ -253,12 +302,15 @@ class ApiService {
   /**
    * Login user
    */
-async login(credentials: { email: string; password: string }): Promise<{ token: string; user: ApiUser }> {
+  async login(credentials: { email: string; password: string }): Promise<{ token: string; user: ApiUser }> {
     try {
       const client = await getApiClient();
       const response = await client.post('/auth/login', credentials);
       const { token, user } = response.data;
-      await AsyncStorage.setItem('userToken', token); // Save token for future requests
+      
+      // Use authService to store tokens properly
+      await authService.storeTokens(token, null);
+      
       return { token, user };
     } catch (error: any) {
       console.error('Login error:', error);
@@ -290,6 +342,71 @@ async login(credentials: { email: string; password: string }): Promise<{ token: 
       return response.status === 200;
     } catch (error) {
       return false;
+    }
+  }
+
+  /**
+   * Send forgot password email
+   */
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const client = await getApiClient();
+      const response = await client.post('/auth/forgot-password', { email });
+      return {
+        success: true,
+        message: response.data.message || 'Password reset email sent successfully'
+      };
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      const message = error.response?.data?.message || 'Failed to send password reset email';
+      return {
+        success: false,
+        message
+      };
+    }
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const client = await getApiClient();
+      const response = await client.post('/auth/reset-password', { 
+        token, 
+        password: newPassword 
+      });
+      return {
+        success: true,
+        message: response.data.message || 'Password reset successfully'
+      };
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      const message = error.response?.data?.message || 'Failed to reset password';
+      return {
+        success: false,
+        message
+      };
+    }
+  }
+
+  /**
+   * Verify reset token validity
+   */
+  async verifyResetToken(token: string): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const client = await getApiClient();
+      const response = await client.get(`/auth/verify-reset-token/${token}`);
+      return {
+        valid: response.data.valid || false,
+        message: response.data.message
+      };
+    } catch (error: any) {
+      console.error('Verify reset token error:', error);
+      return {
+        valid: false,
+        message: error.response?.data?.message || 'Invalid or expired reset token'
+      };
     }
   }
 
@@ -872,12 +989,31 @@ async login(credentials: { email: string; password: string }): Promise<{ token: 
       
       // Log FormData for debugging
       console.log('📤 Uploading FormData to /upload/image');
+      console.log('📤 FormData details:', {
+        hasAppend: typeof formData.append === 'function',
+        hasParts: !!(formData as any)._parts,
+        constructor: formData.constructor.name
+      });
+      
+      // Check if FormData has _parts (React Native specific)
+      if ((formData as any)._parts) {
+        console.log('📤 React Native FormData detected, parts:', (formData as any)._parts.length);
+        (formData as any)._parts.forEach(([key, value]: [string, any], index: number) => {
+          console.log(`📤 FormData part ${index}:`, { key, valueType: typeof value, hasUri: !!(value?.uri) });
+        });
+      }
       
       const response = await client.post('/upload/image', formData, {
-        // DO NOT set Content-Type header - let axios/React Native handle it automatically
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         timeout: 30000,
         maxContentLength: 50 * 1024 * 1024,
         maxBodyLength: 50 * 1024 * 1024,
+        transformRequest: (data, headers) => {
+          // Let React Native handle FormData transformation
+          return data;
+        }
       });
       
       console.log('📤 Upload response:', response.data);
@@ -1121,6 +1257,117 @@ async login(credentials: { email: string; password: string }): Promise<{ token: 
     }
   }
 
+  // ===== IoT DEVICE APIs =====
+  
+  /**
+   * Get all IoT devices
+   */
+  async getIoTDevices(): Promise<any[]> {
+    try {
+      const client = await getApiClient();
+      const response = await client.get('/iot/devices');
+      return response.data.data || [];
+    } catch (error: any) {
+      // Return empty array for 404 errors to avoid breaking the app
+      if (error.response?.status === 404) {
+        console.log('IoT devices endpoint not available');
+        return [];
+      }
+      console.error('Error fetching IoT devices:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get IoT device by ID
+   */
+  async getIoTDevice(deviceId: string): Promise<any> {
+    try {
+      const client = await getApiClient();
+      const response = await client.get(`/iot/devices/${deviceId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching IoT device:', error);
+      throw new Error('Failed to fetch IoT device');
+    }
+  }
+  
+  /**
+   * Get IoT readings
+   */
+  async getIoTReadings(deviceId?: string): Promise<any[]> {
+    try {
+      const client = await getApiClient();
+      const endpoint = deviceId ? `/iot/readings/${deviceId}` : '/iot/readings';
+      const response = await client.get(endpoint);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching IoT readings:', error);
+      return [];
+    }
+  }
+  
+  // ===== MARKET APIs =====
+  
+  /**
+   * Get market prices
+   */
+  async getMarketPrices(params?: any): Promise<any[]> {
+    try {
+      const client = await getApiClient();
+      const queryParams = new URLSearchParams();
+      if (params?.crop) queryParams.append('crop', params.crop);
+      if (params?.location) queryParams.append('location', params.location);
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      
+      const response = await client.get(`/market/prices?${queryParams.toString()}`);
+      return response.data.data || [];
+    } catch (error: any) {
+      // Return empty array for 404 errors to avoid breaking the app
+      if (error.response?.status === 404) {
+        console.log('Market prices endpoint not available');
+        return [];
+      }
+      console.error('Error fetching market prices:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get market trends
+   */
+  async getMarketTrends(): Promise<any[]> {
+    try {
+      const client = await getApiClient();
+      const response = await client.get('/market/trends');
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching market trends:', error);
+      return [];
+    }
+  }
+  
+  // ===== COMMUNITY EVENTS APIs =====
+  
+  /**
+   * Get community events
+   */
+  async getCommunityEvents(): Promise<any[]> {
+    try {
+      const client = await getApiClient();
+      const response = await client.get('/community/events');
+      return response.data.data || [];
+    } catch (error: any) {
+      // Return empty array for 404 errors to avoid breaking the app
+      if (error.response?.status === 404) {
+        console.log('Community events endpoint not available');
+        return [];
+      }
+      console.error('Error fetching community events:', error);
+      return [];
+    }
+  }
+  
   // ===== GENERIC REQUEST METHODS =====
   
   async get(url: string, config?: any) {

@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
+import { COLORS, FONTS, SPACING } from '../constants/theme';
 
 // Hardcoded theme values to avoid undefined errors
 const SPACING = {
@@ -31,7 +31,7 @@ export const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     padding: SPACING.lg,
-    paddingTop: SPACING.xl,
+    paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight || 0) + SPACING.lg,
   },
   headerTitle: {
     fontSize: FONTS.size.xxl,

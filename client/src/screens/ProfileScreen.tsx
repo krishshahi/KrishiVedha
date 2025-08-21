@@ -101,9 +101,27 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, u
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    location: user?.location || ''
+    location: typeof user?.location === 'string' ? user.location : 
+             user?.location?.district ? 
+               `${user.location.district}${user.location.province ? `, ${user.location.province}` : ''}${user.location.country ? `, ${user.location.country}` : ''}` 
+               : ''
   });
   const [saving, setSaving] = useState(false);
+
+  // Reset form data when user changes or modal opens
+  useEffect(() => {
+    if (visible && user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: typeof user.location === 'string' ? user.location : 
+                 user.location?.district ? 
+                   `${user.location.district}${user.location.province ? `, ${user.location.province}` : ''}${user.location.country ? `, ${user.location.country}` : ''}` 
+                   : ''
+      });
+    }
+  }, [visible, user]);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -114,12 +132,15 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, u
     setSaving(true);
     try {
       await onSave(formData);
-      onClose();
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-    } finally {
       setSaving(false);
+      onClose();
+      // Show success message after modal is closed
+      setTimeout(() => {
+        Alert.alert('Success', 'Profile updated successfully!');
+      }, 100);
+    } catch (error) {
+      setSaving(false);
+      Alert.alert('Error', 'Failed to update profile');
     }
   };
 
@@ -289,12 +310,31 @@ const ProfileScreen = () => {
 
   const handleEditProfile = useCallback(async (formData: any) => {
     try {
-      await dispatch(updateUserProfile(formData)).unwrap();
-      await dispatch(syncUserData());
-    } catch (error) {
+      console.log('[EDIT_PROFILE] 📝 Starting profile update with data:', formData);
+      console.log('[EDIT_PROFILE] 📝 Current user before update:', { 
+        name: user?.name, 
+        email: user?.email, 
+        phone: user?.phone, 
+        location: user?.location 
+      });
+      
+      // Update user profile via Redux action
+      const updatedUser = await dispatch(updateUserProfile(formData)).unwrap();
+      console.log('[EDIT_PROFILE] ✅ Redux update successful, updated user:', {
+        name: updatedUser?.name,
+        email: updatedUser?.email,
+        phone: updatedUser?.phone,
+        location: updatedUser?.location
+      });
+      
+      // Don't call syncUserData - it might overwrite our changes with stale server data
+      // The updateUserProfile already updates the backend and Redux state
+      
+    } catch (error: any) {
+      console.error('[EDIT_PROFILE] ❌ Profile update failed:', error);
       throw error;
     }
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const handleQuickAction = useCallback((action: string) => {
     switch (action) {
@@ -315,9 +355,11 @@ const ProfileScreen = () => {
   const handleNotificationToggle = useCallback(async (key: string, value: boolean) => {
     try {
       console.log(`[NOTIFICATIONS] 🔔 Updating ${key} to ${value}`);
-      
-      // Update local Redux state immediately for instant UI feedback
-      dispatch(setNotificationPreference({ key, value }));
+      console.log(`[NOTIFICATIONS] 🔔 Current user state:`, {
+        hasUser: !!user,
+        hasPreferences: !!user?.preferences,
+        preferences: user?.preferences
+      });
       
       // Provide user feedback based on the change
       const notificationNames: { [key: string]: string } = {
@@ -330,7 +372,15 @@ const ProfileScreen = () => {
       const notificationName = notificationNames[key] || key.charAt(0).toUpperCase() + key.slice(1);
       const statusText = value ? 'enabled' : 'disabled';
       
-      console.log(`[NOTIFICATIONS] ✅ Local preference updated: ${notificationName} ${statusText}`);
+      // Update local Redux state immediately for instant UI feedback
+      // Use a safer approach to avoid proxy issues
+      try {
+        dispatch(setNotificationPreference({ key, value }));
+        console.log(`[NOTIFICATIONS] ✅ Redux state updated: ${notificationName} ${statusText}`);
+      } catch (reduxError) {
+        console.error(`[NOTIFICATIONS] ❌ Redux update failed:`, reduxError);
+        throw reduxError;
+      }
       
       // Optional: Try to sync with backend if available (don't block user experience)
       if (user?.id) {
@@ -341,19 +391,25 @@ const ProfileScreen = () => {
             if (isHealthy) {
               console.log(`[NOTIFICATIONS] 🔄 Background sync: ${key} preference to backend...`);
               
-              // Get the current user preferences (might have changed since the toggle)
-              const currentUser = await AsyncStorage.getItem('userData');
-              if (currentUser) {
-                const userData = JSON.parse(currentUser);
-                
-                // Update profile with current preferences (local is source of truth)
-                await dispatch(updateUserProfile({ preferences: userData.preferences })).unwrap();
+              // Create a clean preferences object for backend sync
+              const currentPreferences = {
+                weatherAlerts: user.preferences?.weatherAlerts ?? true,
+                cropReminders: user.preferences?.cropReminders ?? true,
+                communityUpdates: user.preferences?.communityUpdates ?? true,
+                notificationsEnabled: user.preferences?.notificationsEnabled ?? true,
+                // Apply the current change
+                [key]: value
+              };
+              
+              try {
+                await dispatch(updateUserProfile({ preferences: currentPreferences })).unwrap();
                 console.log(`[NOTIFICATIONS] ✅ Background sync completed for ${key}`);
+              } catch (syncError) {
+                console.warn(`[NOTIFICATIONS] ⚠️ Background sync failed for ${key}:`, syncError);
               }
             }
-          } catch (syncError) {
-            console.warn(`[NOTIFICATIONS] ⚠️ Background sync failed for ${key}:`, syncError);
-            // Silent failure - user already has local changes saved
+          } catch (healthError) {
+            console.warn(`[NOTIFICATIONS] ⚠️ Health check failed during background sync:`, healthError);
           }
         }, 100); // Small delay to not block UI
       }
@@ -373,11 +429,24 @@ const ProfileScreen = () => {
         console.log(`[NOTIFICATIONS] ℹ️ ${notificationName} ${statusText}`);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error(`[NOTIFICATIONS] ❌ Failed to update ${key} preference:`, error);
+      console.error(`[NOTIFICATIONS] ❌ Error stack:`, error.stack);
       
-      // Revert the change if there was an error
-      dispatch(setNotificationPreference({ key, value: !value }));
+      // Try to revert the change if there was an error
+      try {
+        dispatch(setNotificationPreference({ key, value: !value }));
+        console.log(`[NOTIFICATIONS] ↩️ Reverted ${key} preference`);
+      } catch (revertError) {
+        console.error(`[NOTIFICATIONS] ❌ Failed to revert ${key} preference:`, revertError);
+      }
+      
+      const notificationNames: { [key: string]: string } = {
+        weatherAlerts: 'Weather Alerts',
+        cropReminders: 'Crop Reminders',
+        communityUpdates: 'Community Updates',
+        notificationsEnabled: 'All Notifications',
+      };
       
       Alert.alert(
         'Error',
@@ -420,79 +489,115 @@ const ProfileScreen = () => {
     try {
       setUploadingImage(true);
       
-      // Create FormData for image upload with proper React Native format
-      const formData = new FormData();
+      // Define possible field names to try
+      const fieldNames = ['image', 'file', 'photo', 'upload', 'avatar', 'picture'];
+      let uploadSuccess = false;
+      let finalResponse = null;
       
-      // For React Native, we need to properly format the file object
-      const filename = imageUri.split('/').pop() || 'profile.jpg';
-      const match = /\.([\w]+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
-      
-      formData.append('image', {
-        uri: imageUri,
-        name: filename,
-        type: type,
-      } as any);
-      
-      console.log('📤 Uploading image with FormData:', {
-        uri: imageUri,
-        name: filename,
-        type: type
-      });
-      
-      try {
-        // Upload image via API service
-        const response = await apiService.uploadImage(formData);
-        
-        console.log('📸 Upload response received:', JSON.stringify(response, null, 2));
-        
-        if (response.success) {
-          let imageUrl = response.data.url;
-          console.log('📸 Original image URL from server:', imageUrl);
+      // Try different field names sequentially
+      for (const fieldName of fieldNames) {
+        try {
+          console.log(`📤 Attempting upload with field name: ${fieldName}`);
           
-          // Convert relative URL to full URL if needed
-          if (imageUrl && imageUrl.startsWith('/uploads/')) {
-            const baseUrl = apiService.baseURL; // Get base URL from apiService
-            imageUrl = `${baseUrl}${imageUrl}`;
-            console.log('📸 Constructed full image URL:', imageUrl);
+          const formData = new FormData();
+          const filename = imageUri.split('/').pop() || 'profile.jpg';
+          const match = /\.([\w]+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : 'image/jpeg';
+          
+          const imageObject = {
+            uri: imageUri,
+            name: filename,
+            type: type,
+          } as any;
+          
+          formData.append(fieldName, imageObject);
+          
+          console.log(`📤 FormData created with field '${fieldName}':`, {
+            uri: imageUri,
+            name: filename,
+            type: type
+          });
+          
+          // Try the upload
+          const response = await apiService.uploadImage(formData);
+          
+          console.log(`📸 Upload attempt with '${fieldName}' response:`, JSON.stringify(response, null, 2));
+          
+          if (response.success) {
+            console.log(`✅ Upload successful with field name: ${fieldName}`);
+            finalResponse = response;
+            uploadSuccess = true;
+            break;
+          } else {
+            console.log(`❌ Upload failed with field name '${fieldName}': ${response.message}`);
           }
+        } catch (fieldError: any) {
+          console.log(`❌ Upload error with field name '${fieldName}':`, fieldError.message);
           
-          console.log('📸 Final image URL to save:', imageUrl);
-          
-          // Update local state immediately for instant feedback
-          setProfileImageUri(imageUrl);
-          console.log('📸 Local state updated with image URL');
-          
-          // Update user profile in Redux store
-          try {
-            await dispatch(updateUserProfile({ profilePicture: imageUrl })).unwrap();
-            console.log('📸 Redux store updated successfully');
-            Alert.alert('Success', 'Profile picture updated successfully!');
-          } catch (storeError) {
-            console.warn('📸 Failed to update Redux store, but image uploaded:', storeError);
-            // Keep local image even if store update fails
-            Alert.alert('Success', 'Profile picture updated successfully!');
+          // If the error is specifically about "No image file provided", try next field
+          if (fieldError.message?.includes('No image file provided') || 
+              fieldError.message?.includes('image') || 
+              fieldError.message?.includes('file')) {
+            continue; // Try next field name
+          } else {
+            // For other errors (network, auth, etc), don't retry
+            throw fieldError;
           }
-        } else {
-          throw new Error(response.message || 'Upload failed');
         }
-      } catch (uploadError: any) {
-        console.warn('Upload to server failed, using local image temporarily:', uploadError.message);
+      }
+      
+      if (uploadSuccess && finalResponse) {
+        let imageUrl = finalResponse.data.url;
+        console.log('📸 Original image URL from server:', imageUrl);
         
-        // For demo purposes, use the local image URI directly
-        // In production, you'd want to queue this for retry when network is available
+        // Convert relative URL to full URL if needed
+        if (imageUrl && imageUrl.startsWith('/uploads/')) {
+          const baseUrl = apiService.baseURL;
+          imageUrl = `${baseUrl}${imageUrl}`;
+          console.log('📸 Constructed full image URL:', imageUrl);
+        }
+        
+        console.log('📸 Final image URL to save:', imageUrl);
+        
+        // Update local state immediately for instant feedback
+        setProfileImageUri(imageUrl);
+        console.log('📸 Local state updated with image URL');
+        
+        // Update user profile in Redux store
+        try {
+          await dispatch(updateUserProfile({ profilePicture: imageUrl })).unwrap();
+          console.log('📸 Redux store updated successfully');
+          Alert.alert('Success', 'Profile picture updated successfully!');
+        } catch (storeError) {
+          console.warn('📸 Failed to update Redux store, but image uploaded:', storeError);
+          Alert.alert('Success', 'Profile picture updated successfully!');
+        }
+      } else {
+        console.warn('📤 All field names failed, falling back to local image');
+        
+        // Fallback: use local image and show appropriate message
         setProfileImageUri(imageUri);
         
         Alert.alert(
-          'Image Updated Locally',
-          'Your profile picture has been updated locally. It will be uploaded when network connection is restored.'
+          'Server Upload Failed',
+          'Unable to upload to server. The image has been saved locally and will be uploaded when the connection is restored.',
+          [
+            { text: 'OK', style: 'default' }
+          ]
         );
       }
     } catch (error: any) {
       console.error('Profile image processing error:', error);
+      
+      // Last resort: use local image
+      setProfileImageUri(imageUri);
+      
       Alert.alert(
-        'Image Processing Failed',
-        'Failed to process the image. Please try again with a different image.'
+        'Upload Issue',
+        `Failed to upload image: ${error.message}. The image has been saved locally.`,
+        [
+          { text: 'OK', style: 'default' }
+        ]
       );
     } finally {
       setUploadingImage(false);
@@ -834,51 +939,6 @@ const ProfileScreen = () => {
         </View>
 
 
-        {/* My Farms Section - Only show if farms exist or loading */}
-        {(farms.length > 0 || farmsLoading) && (
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>My Farms</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => handleQuickAction('addFarm')}
-              >
-                <Text style={styles.addButtonText}>+ Add</Text>
-              </TouchableOpacity>
-            </View>
-
-            {farmsLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator color={COLORS.primary} />
-                <Text style={styles.loadingText}>Loading farms...</Text>
-              </View>
-            ) : farms.length > 0 ? (
-              farms.slice(0, 3).map((farm) => (
-                <TouchableOpacity
-                  key={farm.id}
-                  style={styles.farmCard}
-                  onPress={() => Alert.alert('Farm Details', `${farm.name}\nLocation: ${farm.location}\nCrops: ${farm.crops.join(', ')}\nSize: ${farm.area} hectares`)}
-                >
-                  <View style={styles.farmIconContainer}>
-                    <Text style={styles.farmIcon}>🌾</Text>
-                  </View>
-                  <View style={styles.farmInfo}>
-                    <Text style={styles.farmName}>{farm.name}</Text>
-                    <Text style={styles.farmLocation}>{farm.location}</Text>
-                    <Text style={styles.farmCrops}>{farm.crops.join(', ')}</Text>
-                    <Text style={styles.farmSize}>{farm.area} hectares</Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : null}
-            
-            {farms.length > 3 && (
-              <TouchableOpacity style={styles.viewAllButton}>
-                <Text style={styles.viewAllText}>View All Farms ({farms.length})</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
 
 
         {/* Settings */}
@@ -910,13 +970,8 @@ const ProfileScreen = () => {
 
         {/* App Info & Actions */}
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Settings & Support</Text>
+          <Text style={styles.sectionTitle}>Support</Text>
           
-          <SettingItem
-            title="App Settings"
-            icon="⚙️"
-            onPress={() => navigation.navigate('Settings')}
-          />
           <SettingItem
             title="Help & Support"
             icon="❓"

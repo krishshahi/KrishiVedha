@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { styles } from '../styles/CropDetailScreen.styles';
 import { COLORS } from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,8 @@ import { mlCropAnalysisService } from '../services/mlCropAnalysisService';
 // Define the type for the route params
 type CropDetailScreenRouteProp = {
   CropDetail: {
-    crop: any; // Using any for now, should be replaced with a proper Crop type
+    crop?: any; // Optional: crop object if passed directly
+    cropId?: string; // Optional: crop ID to fetch details
   };
 };
 
@@ -83,19 +84,45 @@ const ActivityItem = ({ activity, onEdit, onDelete }) => {
 
 const CropDetailScreen = () => {
   const route = useRoute<RouteProp<CropDetailScreenRouteProp, 'CropDetail'>>();
-  const { crop } = route.params;
+  const navigation = useNavigation();
+  const params = route.params || {};
+  const [crop, setCrop] = useState(params.crop || null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [editingActivity, setEditingActivity] = useState(null);
   const [mlAnalysis, setMlAnalysis] = useState(null);
   const [analyzingHealth, setAnalyzingHealth] = useState(false);
+  const [fetchingCrop, setFetchingCrop] = useState(!params.crop);
 
-  // Load activities and ML analysis when component mounts
+  // Fetch crop details if only cropId is provided
   useEffect(() => {
-    loadActivities();
-    performMLAnalysis();
-  }, [crop._id]);
+    const fetchCropDetails = async () => {
+      if (params.cropId && !params.crop) {
+        try {
+          setFetchingCrop(true);
+          console.log('Fetching crop details for ID:', params.cropId);
+          const cropData = await apiService.getCropById(params.cropId);
+          setCrop(cropData);
+        } catch (error) {
+          console.error('Error fetching crop details:', error);
+          Alert.alert('Error', 'Failed to load crop details');
+        } finally {
+          setFetchingCrop(false);
+        }
+      }
+    };
+    
+    fetchCropDetails();
+  }, [params.cropId]);
+
+  // Load activities and ML analysis when crop is available
+  useEffect(() => {
+    if (crop && crop._id) {
+      loadActivities();
+      performMLAnalysis();
+    }
+  }, [crop]);
 
   const performMLAnalysis = async () => {
     try {
@@ -193,6 +220,16 @@ const CropDetailScreen = () => {
     setShowAddActivity(true);
   };
 
+  if (fetchingCrop) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading crop details...</Text>
+        </View>
+      </View>
+    );
+  }
+
   if (!crop) {
     return (
       <View style={styles.container}>
@@ -258,7 +295,7 @@ const CropDetailScreen = () => {
 
           {analyzingHealth ? (
             <View style={{ alignItems: 'center', padding: 20 }}>
-              <Ionicons name="cpu" size={32} color={COLORS.primary} style={{ marginBottom: 12 }} />
+              <Ionicons name="analytics" size={32} color={COLORS.primary} style={{ marginBottom: 12 }} />
               <Text style={{ color: COLORS.text.primary, marginBottom: 8 }}>Analyzing crop health...</Text>
               <Text style={{ color: COLORS.text.secondary, textAlign: 'center', fontSize: 12 }}>
                 Using ML model: {mlAnalysis?.modelUsed || 'CropHealthNet v2.1'}
@@ -272,21 +309,21 @@ const CropDetailScreen = () => {
                 alignItems: 'center',
                 marginBottom: 16,
                 padding: 16,
-                backgroundColor: getHealthColor(mlAnalysis.healthScore) + '15',
+                backgroundColor: getHealthColor(typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore) + '15',
                 borderRadius: 8,
                 borderLeftWidth: 4,
-                borderLeftColor: getHealthColor(mlAnalysis.healthScore)
+                borderLeftColor: getHealthColor(typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore)
               }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.text.primary, marginBottom: 4 }}>
-                    Health Score: {mlAnalysis.healthScore}/100
+                    Health Score: {typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore}/100
                   </Text>
-                  <Text style={{ fontSize: 14, color: getHealthColor(mlAnalysis.healthScore), textTransform: 'capitalize' }}>
-                    Status: {mlAnalysis.status} • {mlAnalysis.confidence}% confident
+                  <Text style={{ fontSize: 14, color: getHealthColor(typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore), textTransform: 'capitalize' }}>
+                    Status: {typeof mlAnalysis.status === 'object' ? mlAnalysis.status.status : mlAnalysis.status} • {mlAnalysis.confidence}% confident
                   </Text>
                 </View>
                 <View style={{
-                  backgroundColor: getHealthColor(mlAnalysis.healthScore),
+                  backgroundColor: getHealthColor(typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore),
                   borderRadius: 20,
                   width: 40,
                   height: 40,
@@ -294,7 +331,7 @@ const CropDetailScreen = () => {
                   alignItems: 'center'
                 }}>
                   <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                    {mlAnalysis.healthScore >= 85 ? '✓' : mlAnalysis.healthScore >= 60 ? '!' : '⚠'}
+                    {(typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore) >= 85 ? '✓' : (typeof mlAnalysis.healthScore === 'object' ? mlAnalysis.healthScore.overall : mlAnalysis.healthScore) >= 60 ? '!' : '⚠'}
                   </Text>
                 </View>
               </View>
@@ -318,12 +355,12 @@ const CropDetailScreen = () => {
               )}
 
               {/* Disease Risks */}
-              {mlAnalysis.diseases && mlAnalysis.diseases.length > 0 && (
+              {mlAnalysis.diseaseAnalysis && mlAnalysis.diseaseAnalysis.length > 0 && (
                 <View style={{ marginBottom: 16 }}>
                   <Text style={{ fontSize: 16, fontWeight: '600', color: COLORS.text.primary, marginBottom: 8 }}>
                     Disease Risks
                   </Text>
-                  {mlAnalysis.diseases.slice(0, 3).map((disease, index) => (
+                  {mlAnalysis.diseaseAnalysis.slice(0, 3).map((disease, index) => (
                     <View key={index} style={{
                       flexDirection: 'row',
                       justifyContent: 'space-between',

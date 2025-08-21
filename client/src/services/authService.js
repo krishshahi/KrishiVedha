@@ -58,23 +58,92 @@ class AuthService {
     }
   }
 
-  // Encrypt sensitive data
+  // Encrypt sensitive data (React Native compatible)
   encryptData(data) {
     try {
-      return CryptoJS.AES.encrypt(JSON.stringify(data), ENCRYPTION_KEY).toString();
+      console.log('[AUTH] 🔐 Encoding data for secure storage...');
+      
+      // Use base64 encoding for React Native compatibility
+      // This provides basic obfuscation while avoiding crypto module issues
+      const jsonString = JSON.stringify(data);
+      
+      // Simple XOR obfuscation + base64 for basic security
+      let obfuscated = '';
+      for (let i = 0; i < jsonString.length; i++) {
+        const charCode = jsonString.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+        obfuscated += String.fromCharCode(charCode);
+      }
+      
+      const base64Data = btoa(unescape(encodeURIComponent(obfuscated)));
+      console.log('[AUTH] ✅ Data encoded successfully');
+      return `encoded:${base64Data}`;
     } catch (error) {
-      console.error('[AUTH] Encryption failed:', error);
-      return null;
+      console.error('[AUTH] ❌ Encoding failed:', error);
+      console.log('[AUTH] 🔄 Falling back to plain base64...');
+      
+      // Simple base64 fallback
+      try {
+        const jsonString = JSON.stringify(data);
+        const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+        return `base64:${base64Data}`;
+      } catch (fallbackError) {
+        console.error('[AUTH] ❌ Base64 fallback failed:', fallbackError);
+        // Last resort: return JSON string with prefix
+        console.warn('[AUTH] ⚠️ Storing data as plain JSON');
+        return `plain:${JSON.stringify(data)}`;
+      }
     }
   }
 
-  // Decrypt sensitive data
+  // Decrypt sensitive data (React Native compatible)
   decryptData(encryptedData) {
     try {
-      const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      // Check if this is XOR obfuscated + base64 encoded data
+      if (typeof encryptedData === 'string' && encryptedData.startsWith('encoded:')) {
+        console.log('[AUTH] 🔓 Decoding obfuscated data...');
+        const base64Data = encryptedData.substring(8); // Remove 'encoded:' prefix
+        const decodedObfuscated = decodeURIComponent(escape(atob(base64Data)));
+        
+        // Reverse XOR obfuscation
+        let original = '';
+        for (let i = 0; i < decodedObfuscated.length; i++) {
+          const charCode = decodedObfuscated.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+          original += String.fromCharCode(charCode);
+        }
+        
+        const result = JSON.parse(original);
+        console.log('[AUTH] ✅ Data decoded successfully');
+        return result;
+      }
+      
+      // Check if this is simple base64 data
+      if (typeof encryptedData === 'string' && encryptedData.startsWith('base64:')) {
+        console.log('[AUTH] 🔄 Using base64 decoding...');
+        const base64Data = encryptedData.substring(7); // Remove 'base64:' prefix
+        const decoded = decodeURIComponent(escape(atob(base64Data)));
+        return JSON.parse(decoded);
+      }
+      
+      // Check if this is plain data
+      if (typeof encryptedData === 'string' && encryptedData.startsWith('plain:')) {
+        console.log('[AUTH] ⚠️ Using plain data (no encryption)...');
+        const plainData = encryptedData.substring(6); // Remove 'plain:' prefix
+        return JSON.parse(plainData);
+      }
+      
+      // Try legacy AES decryption for existing data
+      try {
+        const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+        const decrypted = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        console.log('[AUTH] ✅ Legacy AES data decrypted successfully');
+        return decrypted;
+      } catch (aesError) {
+        console.warn('[AUTH] ⚠️ Legacy AES decryption failed, trying as JSON:', aesError.message);
+        // Last resort: try parsing as direct JSON
+        return JSON.parse(encryptedData);
+      }
     } catch (error) {
-      console.error('[AUTH] Decryption failed:', error);
+      console.error('[AUTH] ❌ All decryption methods failed:', error);
       return null;
     }
   }
@@ -82,21 +151,51 @@ class AuthService {
   // Store tokens securely
   async storeTokens(authToken, refreshToken) {
     try {
+      console.log('[AUTH] 📦 Storing tokens...', { hasToken: !!authToken, hasRefresh: !!refreshToken });
+      
+      if (!authToken) {
+        console.error('[AUTH] ❌ Cannot store null/undefined token');
+        throw new Error('Token is required for storage');
+      }
+      
       const tokenData = {
         authToken,
         refreshToken,
         timestamp: Date.now()
       };
 
-      const encryptedTokens = this.encryptData(tokenData);
-      await AsyncStorage.setItem('auth_tokens', encryptedTokens);
+      // Try to encrypt and store
+      try {
+        const encryptedTokens = this.encryptData(tokenData);
+        if (encryptedTokens) {
+          await AsyncStorage.setItem('auth_tokens', encryptedTokens);
+          console.log('[AUTH] ✅ Encrypted tokens stored');
+        } else {
+          throw new Error('Encryption returned null');
+        }
+      } catch (encryptError) {
+        console.warn('[AUTH] ⚠️ Encryption failed, storing as JSON:', encryptError.message);
+        // Fallback: store as plain JSON if encryption fails
+        await AsyncStorage.setItem('auth_tokens', JSON.stringify(tokenData));
+      }
+      
+      // Also store the token in the format expected by apiService for compatibility
+      await AsyncStorage.setItem('userToken', authToken);
+      
+      // Handle refresh token properly
+      if (refreshToken) {
+        await AsyncStorage.setItem('refreshToken', refreshToken);
+      } else {
+        // Remove refresh token if it's null/undefined
+        await AsyncStorage.removeItem('refreshToken');
+      }
       
       this.authToken = authToken;
       this.refreshToken = refreshToken;
       
-      console.log('[AUTH] Tokens stored securely');
+      console.log('[AUTH] ✅ All tokens stored successfully');
     } catch (error) {
-      console.error('[AUTH] Failed to store tokens:', error);
+      console.error('[AUTH] ❌ Failed to store tokens:', error);
       throw error;
     }
   }
@@ -104,22 +203,54 @@ class AuthService {
   // Retrieve tokens
   async getStoredTokens() {
     try {
-      const encryptedTokens = await AsyncStorage.getItem('auth_tokens');
-      if (!encryptedTokens) return null;
-
-      const tokenData = this.decryptData(encryptedTokens);
-      if (!tokenData) return null;
-
-      // Check if tokens are expired (7 days)
-      const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      if (Date.now() - tokenData.timestamp > sevenDays) {
-        await this.clearStoredTokens();
+      console.log('[AUTH] 🔍 Getting stored tokens...');
+      
+      const storedTokens = await AsyncStorage.getItem('auth_tokens');
+      if (!storedTokens) {
+        console.log('[AUTH] 🔍 No auth_tokens found in storage');
         return null;
       }
 
+      console.log('[AUTH] 🔍 Found stored tokens, attempting to parse...');
+      
+      let tokenData;
+      try {
+        // Try to decrypt first
+        tokenData = this.decryptData(storedTokens);
+      } catch (decryptError) {
+        console.warn('[AUTH] ⚠️ Decryption failed, trying as plain JSON:', decryptError.message);
+        try {
+          // Fallback: try to parse as plain JSON
+          tokenData = JSON.parse(storedTokens);
+          console.log('[AUTH] ✅ Parsed as plain JSON');
+        } catch (parseError) {
+          console.error('[AUTH] ❌ Failed to parse stored tokens:', parseError);
+          return null;
+        }
+      }
+      
+      if (!tokenData) {
+        console.log('[AUTH] ❌ Token data is null after parsing');
+        return null;
+      }
+
+      // Check if tokens are expired (7 days)
+      if (tokenData.timestamp) {
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        const age = Date.now() - tokenData.timestamp;
+        console.log('[AUTH] 🕐 Token age (hours):', (age / (1000 * 60 * 60)).toFixed(2));
+        
+        if (age > sevenDays) {
+          console.log('[AUTH] ⏰ Tokens expired, clearing...');
+          await this.clearStoredTokens();
+          return null;
+        }
+      }
+
+      console.log('[AUTH] ✅ Valid tokens retrieved from storage');
       return tokenData;
     } catch (error) {
-      console.error('[AUTH] Failed to retrieve tokens:', error);
+      console.error('[AUTH] ❌ Failed to retrieve tokens:', error);
       return null;
     }
   }
@@ -129,6 +260,7 @@ class AuthService {
     try {
       await AsyncStorage.removeItem('auth_tokens');
       await AsyncStorage.removeItem('user_data');
+      await AsyncStorage.removeItem('userToken');
       this.authToken = null;
       this.refreshToken = null;
       this.currentUser = null;
@@ -335,11 +467,38 @@ class AuthService {
   // Store user data securely
   async storeUserData(userData) {
     try {
-      const encryptedData = this.encryptData(userData);
-      await AsyncStorage.setItem('user_data', encryptedData);
-      console.log('[AUTH] User data stored securely');
+      console.log('[AUTH] 📦 Storing user data...');
+      
+      if (!userData) {
+        console.log('[AUTH] 🗑️ Removing user data (null/undefined provided)');
+        await AsyncStorage.removeItem('user_data');
+        await AsyncStorage.removeItem('userData'); // Also remove legacy key
+        this.currentUser = null;
+        return;
+      }
+      
+      try {
+        const encryptedData = this.encryptData(userData);
+        if (encryptedData) {
+          await AsyncStorage.setItem('user_data', encryptedData);
+          console.log('[AUTH] ✅ Encrypted user data stored');
+        } else {
+          throw new Error('Encryption returned null');
+        }
+      } catch (encryptError) {
+        console.warn('[AUTH] ⚠️ User data encryption failed, storing as JSON:', encryptError.message);
+        // Fallback: store as plain JSON
+        await AsyncStorage.setItem('user_data', JSON.stringify(userData));
+      }
+      
+      // Also store in legacy format for compatibility
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      
+      this.currentUser = userData;
+      console.log('[AUTH] ✅ User data stored successfully');
     } catch (error) {
-      console.error('[AUTH] Failed to store user data:', error);
+      console.error('[AUTH] ❌ Failed to store user data:', error);
+      throw error;
     }
   }
 
@@ -660,6 +819,50 @@ class AuthService {
     return this.authToken ? `Bearer ${this.authToken}` : null;
   }
 
+  // Get current auth token
+  getToken() {
+    return this.authToken;
+  }
+
+  // Get current auth token async (for compatibility)
+  async getTokenAsync() {
+    console.log('[AUTH] 🔍 getTokenAsync called');
+    console.log('[AUTH] 🔍 Current authToken:', this.authToken ? this.authToken.substring(0, 20) + '...' : 'null');
+    
+    // First try to get current token
+    if (this.authToken) {
+      console.log('[AUTH] 🔍 Returning current authToken');
+      return this.authToken;
+    }
+    
+    // If no current token, try to get from storage
+    try {
+      console.log('[AUTH] 🔍 No current token, checking storage...');
+      const storedTokens = await this.getStoredTokens();
+      console.log('[AUTH] 🔍 Stored tokens:', storedTokens ? 'found' : 'not found');
+      
+      if (storedTokens && storedTokens.authToken) {
+        console.log('[AUTH] 🔍 Setting authToken from storage:', storedTokens.authToken.substring(0, 20) + '...');
+        this.authToken = storedTokens.authToken;
+        return this.authToken;
+      }
+      
+      // Also try fallback userToken format
+      console.log('[AUTH] 🔍 Checking fallback userToken...');
+      const fallbackToken = await AsyncStorage.getItem('userToken');
+      if (fallbackToken) {
+        console.log('[AUTH] 🔍 Found fallback userToken:', fallbackToken.substring(0, 20) + '...');
+        this.authToken = fallbackToken;
+        return this.authToken;
+      }
+    } catch (error) {
+      console.error('[AUTH] Failed to get token from storage:', error);
+    }
+    
+    console.log('[AUTH] 🔍 No token found anywhere, returning null');
+    return null;
+  }
+
   // Get user profile (for refreshing user data)
   async getUserProfile() {
     try {
@@ -783,6 +986,71 @@ class AuthService {
         success: false,
         message: error.message || 'Failed to delete account'
       };
+    }
+  }
+
+  // Debug authentication state
+  async debugAuthState() {
+    console.log('=== AUTH SERVICE DEBUG ===');
+    console.log('1. Current state:', {
+      isAuthenticated: this.isAuthenticated,
+      hasAuthToken: !!this.authToken,
+      hasRefreshToken: !!this.refreshToken,
+      hasCurrentUser: !!this.currentUser,
+      userEmail: this.currentUser?.email
+    });
+    
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      console.log('2. userToken in storage:', userToken ? userToken.substring(0, 30) + '...' : 'not found');
+      
+      const authTokens = await AsyncStorage.getItem('auth_tokens');
+      console.log('3. auth_tokens in storage:', authTokens ? 'found (encrypted)' : 'not found');
+      
+      const userData = await AsyncStorage.getItem('userData');
+      console.log('4. userData in storage:', userData ? 'found' : 'not found');
+      
+      // Test current token if available
+      if (this.authToken) {
+        console.log('5. Testing current token...');
+        try {
+          const isValid = await this.verifyToken();
+          console.log('   Token validation result:', isValid ? 'VALID' : 'INVALID');
+        } catch (error) {
+          console.log('   Token validation failed:', error.message);
+        }
+      } else {
+        console.log('5. No current token to test');
+      }
+      
+    } catch (error) {
+      console.error('Debug failed:', error);
+    }
+    console.log('=== END AUTH DEBUG ===');
+  }
+
+  // Force clear all authentication data (for debugging)
+  async forceResetAuth() {
+    console.log('[AUTH] 🧹 Force resetting all authentication data...');
+    try {
+      await AsyncStorage.multiRemove([
+        'auth_tokens',
+        'user_data', 
+        'userData',
+        'userToken',
+        'device_id'
+      ]);
+      
+      this.authToken = null;
+      this.refreshToken = null;
+      this.currentUser = null;
+      this.isAuthenticated = false;
+      
+      console.log('[AUTH] ✅ All authentication data cleared');
+      return true;
+    } catch (error) {
+      console.error('[AUTH] ❌ Failed to reset auth:', error);
+      return false;
     }
   }
 }

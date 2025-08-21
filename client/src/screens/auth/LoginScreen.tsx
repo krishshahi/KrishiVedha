@@ -48,6 +48,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     navigation.navigate('Signup');
   };
 
+  const navigateToForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -84,6 +88,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 placeholderTextColor={COLORS.text.secondary}
                 secureTextEntry
               />
+            </View>
+
+            <View style={styles.forgotPasswordContainer}>
+              <TouchableOpacity onPress={navigateToForgotPassword} disabled={isLoading}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity

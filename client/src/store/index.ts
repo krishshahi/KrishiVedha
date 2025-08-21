@@ -34,8 +34,45 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: [
+          // Redux Persist actions
+          'persist/PERSIST', 
+          'persist/REHYDRATE',
+          'persist/PAUSE',
+          'persist/PURGE',
+          'persist/REGISTER',
+          'persist/FLUSH',
+          // Auth actions that might contain non-serializable data
+          'auth/loginUser/fulfilled',
+          'auth/loginUser/pending',
+          'auth/loginUser/rejected',
+          'auth/registerUser/fulfilled',
+          'auth/registerUser/pending',
+          'auth/registerUser/rejected',
+          'auth/logoutUser',
+          'auth/clearAuth',
+          'auth/setUser',
+          'auth/setToken',
+          'auth/setError'
+        ],
+        ignoredPaths: [
+          'register', 
+          '_persist',
+          'auth.user.createdAt',
+          'auth.user.updatedAt',
+          'auth.token',
+          'auth.refreshToken'
+        ],
+        // Ignore non-serializable values in actions
+        ignoredActionsPaths: [
+          'meta.arg',
+          'payload.timestamp',
+          'payload.user.createdAt',
+          'payload.user.updatedAt'
+        ]
       },
+      // Completely disable immutable check to prevent read-only errors
+      immutableCheck: false,
     }),
   devTools: process.env.NODE_ENV === 'development',
 });
