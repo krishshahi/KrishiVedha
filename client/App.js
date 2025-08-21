@@ -18,6 +18,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import CommunityScreen from './src/screens/CommunityScreen';
 import AINavigator from './src/navigation/AINavigator';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import FloatingChatbot from './src/components/FloatingChatbot';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

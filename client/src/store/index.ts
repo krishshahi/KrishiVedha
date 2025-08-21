@@ -9,6 +9,7 @@ import communityReducer from './slices/communitySlice';
 import dashboardReducer from './slices/dashboardSlice';
 import syncReducer from './slices/syncSlice';
 import notificationReducer from './slices/notificationSlice';
+import chatReducer from './slices/chatSlice';
 
 const persistConfig = {
   key: 'root',
@@ -25,6 +26,7 @@ const rootReducer = combineReducers({
   dashboard: dashboardReducer,
   sync: syncReducer,
   notifications: notificationReducer,
+  chat: chatReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

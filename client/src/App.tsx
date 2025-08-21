@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, SafeAreaView, View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import AppNavigator from './navigation/AppNavigator';
@@ -21,6 +22,7 @@ import { appInitService } from './services/appInitService';
 import { mlCropAnalysisService } from './services/mlCropAnalysisService';
 import { iotIntegrationService } from './services/iotIntegrationService';
 import { pushNotificationService } from './services/pushNotificationService';
+import FloatingChatbot from './components/FloatingChatbot';
 
 /**
  * KrishiVeda - A comprehensive farming app for modern agriculture
@@ -105,17 +107,20 @@ const ThemedApp: React.FC = () => {
   const dynamicStyles = createDynamicStyles(theme);
   
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar 
-          barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
-          backgroundColor={theme.colors.primary} 
-        />
-        <SafeAreaView style={dynamicStyles.container}>
-          <AppNavigator />
-        </SafeAreaView>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <StatusBar 
+            barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+            backgroundColor={theme.colors.primary} 
+          />
+          <SafeAreaView style={dynamicStyles.container}>
+            <AppNavigator />
+          </SafeAreaView>
+          <FloatingChatbot />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 };
 
