@@ -220,7 +220,7 @@ const ProfileScreen = () => {
   const [farmsLoading, setFarmsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [profileImageUri, setProfileImageUri] = useState<string | null>(user?.profilePicture || null);
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [userStats, setUserStats] = useState({ 
     farmCount: 0, 
@@ -741,15 +741,26 @@ const ProfileScreen = () => {
     }, [fetchUserData])
   );
   
-  // Update profile image when user data changes
+  // Initialize and sync profile image when user changes
   useEffect(() => {
-    console.log('📸 User profile picture changed:', user?.profilePicture);
+    console.log('📸 User data changed, syncing profile image...');
+    console.log('📸 User profile picture:', user?.profilePicture);
     console.log('📸 Current profileImageUri:', profileImageUri);
-    if (user?.profilePicture && user.profilePicture !== profileImageUri) {
-      console.log('📸 Updating profile image from user data:', user.profilePicture);
-      setProfileImageUri(user.profilePicture);
+    
+    if (user?.profilePicture) {
+      // User has a profile picture - set it if different
+      if (user.profilePicture !== profileImageUri) {
+        console.log('📸 ✅ Setting profile image from user data:', user.profilePicture);
+        setProfileImageUri(user.profilePicture);
+      }
+    } else {
+      // User has no profile picture - clear the local state
+      if (profileImageUri !== null) {
+        console.log('📸 ❌ Clearing profile image (user has none)');
+        setProfileImageUri(null);
+      }
     }
-  }, [user?.profilePicture]);
+  }, [user?.profilePicture, user?.id]); // Re-run when user ID changes (login/logout)
   
   // Debug logging for profileImageUri changes
   useEffect(() => {

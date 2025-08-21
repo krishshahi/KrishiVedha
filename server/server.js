@@ -831,16 +831,20 @@ app.post('/api/crops/:id/activities', async (req, res) => {
     
     // Auto-update irrigation info if it's a watering activity
     if (type === 'watering') {
+      // Initialize irrigation object if it doesn't exist
+      if (!crop.irrigation) {
+        crop.irrigation = {};
+      }
       crop.irrigation.lastWatered = newActivity.date;
-      if (metadata.amount) {
-        crop.irrigation.waterAmount = metadata.amount;
+      if (newActivity.metadata && newActivity.metadata.amount) {
+        crop.irrigation.waterAmount = newActivity.metadata.amount;
       }
       await crop.save();
     }
     
     // Auto-update growth stage if it's a stage change activity
-    if (type === 'stage_change' && metadata.newStage) {
-      crop.growthStage = metadata.newStage;
+    if (type === 'stage_change' && newActivity.metadata && newActivity.metadata.newStage) {
+      crop.growthStage = newActivity.metadata.newStage;
       await crop.save();
     }
 
@@ -2482,11 +2486,17 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email,
       location: user.profile?.address || user.location || '',
       phone: user.profile?.phoneNumber || user.phone || '',
+      profilePicture: user.profile?.profilePicture || '', // Include profile picture
       joinDate: user.createdAt ? user.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       farmCount: 0, // For in-memory users
       createdAt: user.createdAt || new Date(),
       updatedAt: user.updatedAt || new Date()
     };
+    
+    console.log('🔐 Login userResponse includes profilePicture:', {
+      hasProfilePicture: !!userResponse.profilePicture,
+      profilePicture: userResponse.profilePicture
+    });
     
     res.json({
       success: true,
@@ -2529,7 +2539,210 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Setup test data endpoint
+// Setup multiple test users endpoint
+app.post('/api/setup-test-users', async (req, res) => {
+  try {
+    const testUsers = [
+      {
+        _id: '685829ea7aa46f0e532ec991',
+        username: 'Alice Farmer',
+        email: 'alice@krishiveda.com',
+        password: 'alice123',
+        profile: {
+          firstName: 'Alice',
+          lastName: 'Farmer',
+          phoneNumber: '+1234567891',
+          address: 'Punjab, India',
+          profilePicture: ''
+        },
+        farms: [{
+          _id: '685829ea7aa46f0e532ec994',
+          name: 'Alice\'s Rice Farm',
+          location: 'Punjab, India',
+          coordinates: [75.3412, 31.1471],
+          size: 15,
+          crops: ['Rice', 'Wheat']
+        }]
+      },
+      {
+        _id: '685829ea7aa46f0e532ec992',
+        username: 'Bob Singh',
+        email: 'bob@krishiveda.com', 
+        password: 'bob123',
+        profile: {
+          firstName: 'Bob',
+          lastName: 'Singh',
+          phoneNumber: '+1234567892',
+          address: 'Haryana, India',
+          profilePicture: ''
+        },
+        farms: [{
+          _id: '685829ea7aa46f0e532ec995',
+          name: 'Singh Vegetable Farm',
+          location: 'Haryana, India',
+          coordinates: [76.0856, 29.9588],
+          size: 8,
+          crops: ['Tomatoes', 'Potatoes', 'Onions']
+        }]
+      },
+      {
+        _id: '685829ea7aa46f0e532ec993',
+        username: 'Carol Patel',
+        email: 'carol@krishiveda.com',
+        password: 'carol123',
+        profile: {
+          firstName: 'Carol',
+          lastName: 'Patel',
+          phoneNumber: '+1234567893',
+          address: 'Gujarat, India',
+          profilePicture: ''
+        },
+        farms: [{
+          _id: '685829ea7aa46f0e532ec996',
+          name: 'Patel Cotton Farm',
+          location: 'Gujarat, India',
+          coordinates: [72.5714, 23.0225],
+          size: 25,
+          crops: ['Cotton', 'Groundnut']
+        }]
+      },
+      {
+        _id: '685829ea7aa46f0e532ec990',
+        username: 'Demo User',
+        email: 'demo@krishiveda.com',
+        password: 'demo123',
+        profile: {
+          firstName: 'Demo',
+          lastName: 'User',
+          phoneNumber: '+1234567890',
+          address: 'Demo Location, India',
+          profilePicture: ''
+        },
+        farms: [{
+          _id: '685829ea7aa46f0e532ec997',
+          name: 'Demo Farm',
+          location: 'Demo Location, India',
+          coordinates: [77.2090, 28.6139],
+          size: 10,
+          crops: ['Corn', 'Soybean']
+        }]
+      },
+      {
+        _id: '685829ea7aa46f0e532ec998',
+        username: 'David Kumar',
+        email: 'david@krishiveda.com',
+        password: 'david123',
+        profile: {
+          firstName: 'David',
+          lastName: 'Kumar',
+          phoneNumber: '+1234567894',
+          address: 'Tamil Nadu, India',
+          profilePicture: ''
+        },
+        farms: [{
+          _id: '685829ea7aa46f0e532ec999',
+          name: 'Kumar Fruit Orchard',
+          location: 'Tamil Nadu, India',
+          coordinates: [78.6569, 11.3410],
+          size: 12,
+          crops: ['Mangoes', 'Bananas', 'Coconut']
+        }]
+      }
+    ];
+
+    const createdUsers = [];
+    const createdFarms = [];
+
+    for (const userData of testUsers) {
+      // Check if user already exists
+      let existingUser = await User.findById(userData._id);
+      if (!existingUser) {
+        const newUser = new User({
+          _id: new mongoose.Types.ObjectId(userData._id),
+          username: userData.username,
+          email: userData.email,
+          password: userData.password, // Will be hashed automatically
+          profile: userData.profile
+        });
+        const savedUser = await newUser.save();
+        createdUsers.push({
+          id: savedUser._id.toString(),
+          email: savedUser.email,
+          password: userData.password,
+          name: savedUser.username
+        });
+        console.log('✅ Test user created:', savedUser.email);
+      } else {
+        createdUsers.push({
+          id: existingUser._id.toString(),
+          email: existingUser.email,
+          password: userData.password,
+          name: existingUser.username,
+          existed: true
+        });
+      }
+
+      // Create farms for the user
+      for (const farmData of userData.farms) {
+        let existingFarm = await Farm.findById(farmData._id);
+        if (!existingFarm) {
+          const newFarm = new Farm({
+            _id: new mongoose.Types.ObjectId(farmData._id),
+            name: farmData.name,
+            location: {
+              address: farmData.location,
+              coordinates: {
+                type: 'Point',
+                coordinates: farmData.coordinates
+              }
+            },
+            size: {
+              value: farmData.size,
+              unit: 'acres'
+            },
+            owner: userData._id,
+            farmType: 'crop',
+            crops: farmData.crops.map(crop => ({ name: crop }))
+          });
+          const savedFarm = await newFarm.save();
+          createdFarms.push({
+            id: savedFarm._id.toString(),
+            name: savedFarm.name,
+            owner: userData.email
+          });
+          console.log('✅ Test farm created:', savedFarm.name);
+        } else {
+          createdFarms.push({
+            id: existingFarm._id.toString(),
+            name: existingFarm.name,
+            owner: userData.email,
+            existed: true
+          });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Multiple test users setup completed',
+      data: {
+        users: createdUsers,
+        farms: createdFarms,
+        totalUsers: createdUsers.length,
+        totalFarms: createdFarms.length
+      }
+    });
+  } catch (error) {
+    console.error('Error setting up multiple test users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to setup test users',
+      error: error.message
+    });
+  }
+});
+
+// Original setup test data endpoint (kept for backward compatibility)
 app.post('/api/setup-test-data', async (req, res) => {
   try {
     const testUserId = '685829ea7aa46f0e532ec992';

@@ -7,12 +7,27 @@ import { LoginCredentials, RegisterData, User, UserRole } from '../../types/user
 // Helper function to transform ApiUser to User
 const transformApiUserToUser = (apiUser: ApiUser): User => {
   const locationParts = apiUser.location ? apiUser.location.split(',') : [];
+  
+  // Handle both nested and top-level profilePicture formats from backend
+  let profilePicture = null;
+  if (apiUser.profilePicture) {
+    profilePicture = apiUser.profilePicture;
+  } else if ((apiUser as any).profile?.profilePicture) {
+    profilePicture = (apiUser as any).profile.profilePicture;
+  }
+  
+  console.log('🔄 transformApiUserToUser:', {
+    hasTopLevel: !!apiUser.profilePicture,
+    hasNested: !!((apiUser as any).profile?.profilePicture),
+    finalProfilePicture: profilePicture
+  });
+  
   return {
     id: apiUser.id,
     name: apiUser.name,
     email: apiUser.email,
     phone: apiUser.phone,
-    profilePicture: apiUser.profilePicture, // Now included from ApiUser
+    profilePicture: profilePicture, // Handle both nested and top-level
     role: 'farmer' as UserRole, // Default role, as ApiUser doesn't specify
     location: {
       district: locationParts[0]?.trim() || '',

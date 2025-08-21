@@ -108,6 +108,26 @@ export const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: FONTS.size.sm,
   },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    minHeight: 48,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    fontSize: FONTS.size.md,
+    color: COLORS.text.primary,
+  },
+  eyeIconContainer: {
+    padding: SPACING.sm,
+    marginRight: SPACING.xs,
+  },
   forgotPasswordContainer: {
     alignItems: 'flex-end',
     marginTop: SPACING.sm,

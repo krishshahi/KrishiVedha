@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { loginUser, clearError } from '../../store/slices/authSlice';
 import { COLORS } from '../../constants/colors';
@@ -24,6 +25,7 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
@@ -80,14 +82,28 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                placeholderTextColor={COLORS.text.secondary}
-                secureTextEntry
-              />
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  placeholderTextColor={COLORS.text.secondary}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconContainer}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Icon
+                    name={showPassword ? 'visibility-off' : 'visibility'}
+                    size={20}
+                    color={COLORS.text.secondary}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.forgotPasswordContainer}>
